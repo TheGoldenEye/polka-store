@@ -86,7 +86,8 @@ Now you should have a current node version installed.
 #### 2.1.6 yarn package manager
 
 This repo uses yarn workspaces to organise the code.
-As such, after cloning, its dependencies should be installed via yarn package manager, not via npm, the latter will result in broken dependencies.  
+As such, after cloning, its dependencies should be installed via yarn package manager,
+not via npm, the latter will result in broken dependencies.  
 Install yarn, if you haven't already:
 
 ``` bash
@@ -100,26 +101,78 @@ Please always run this when the sources have been updated from the git repositor
 Use yarn to install the dependencies:
 
 ``` bash
+[cd polka-store]
 yarn
 ```
 
 ## 3 Configuration
 
+Please find the configuration in src/config.json.
+Here are some parameters defined for the different chains.  
+There is currently no need to change the default configuration:
+
+``` bash
+{
+  "filename": "",
+  "defchain": "Polkadot",
+  "chains": {
+    "Polkadot": {
+      "providers": [
+        "ws://127.0.0.1:9944",
+        "wss://rpc.polkadot.io",
+        "wss://cc1-1.polkadot.network"
+      ],
+      "startBlock": 892
+    },
+    "Kusama": {
+      "providers": [
+        "ws://127.0.0.1:9944",
+        "wss://cc3-3.kusama.network",
+        "wss://kusama-rpc.polkadot.io",
+        "wss://cc3-1.kusama.network",
+        "wss://cc3-2.kusama.network",
+        "wss://cc3-4.kusama.network",
+        "wss://cc3-5.kusama.network"
+      ],
+      "startBlock": 3876
+    },
+    "Westend": {
+      "providers": [
+        "ws://127.0.0.1:9944",
+        "wss://westend-rpc.polkadot.io"
+      ],
+      "startBlock": 1191
+    }
+  }
+}
+```
+
+**_Global settings:_**  
+**filename:** The path to the sqlite database, the (empty) default means "data/\<chainname\>.db"  
+**defchain:** The chain which is used (if no chain is given in the command line)  
+**_Chain specific settings:_**  
+**providers:** An array of websocket urls describing the nodes to connect. The program tries to connect the first node in list, if connection fails, the next one is used.  
+**startBlock:** The first block in the chain to be scanned. The standard values refer to the blocks with the first transactions.
+If the database is empty, the block scan starts at this block, if not, at the last block stored in the database.
+
 ## 4 Running
 
-Now you have to build the code
+Now you have to build the code (compile typescript to javascript)
 
 ``` bash
 yarn build
 ```
 
-One of the following commands starts the tool, collecting data from the given chain:
+**One** of the following commands starts the tool, collecting data from the **given** chain:
 
 ``` bash
 yarn polkadot
 yarn kusama
 yarn westend
 ```
+
+**Hint:** If you're connected to your own (or local) node, the chain of the node must match the given chain parameter.
+Otherwise the program is cancelled.
 
 ## 5 Contributions
 
