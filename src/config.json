@@ -1,0 +1,33 @@
+{
+  "filename": "",
+  "defchain": "Polkadot",
+  "chains": {
+    "Polkadot": {
+      "providers": [
+        "ws://127.0.0.1:9944",
+        "wss://rpc.polkadot.io",
+        "wss://cc1-1.polkadot.network"
+      ],
+      "startBlock": 1286861
+    },
+    "Kusama": {
+      "providers": [
+        "ws://127.0.0.1:9944",
+        "wss://cc3-3.kusama.network",
+        "wss://kusama-rpc.polkadot.io",
+        "wss://cc3-1.kusama.network",
+        "wss://cc3-2.kusama.network",
+        "wss://cc3-4.kusama.network",
+        "wss://cc3-5.kusama.network"
+      ],
+      "startBlock": 3876
+    },
+    "Westend": {
+      "providers": [
+        "ws://127.0.0.1:9944",
+        "wss://westend-rpc.polkadot.io"
+      ],
+      "startBlock": 1191
+    }
+  }
+}

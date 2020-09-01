@@ -1,0 +1,32 @@
+{
+  "name": "polkadot_api",
+  "version": "1.0.0",
+  "description": "Store balance-relevant transactions from a Polkadot chain in a database",
+  "main": "main.js",
+  "scripts": {
+    "preinstall": "./calc-fee/build.sh",
+    "postinstall": "yarn upgrade @polkadot/calc-fee",
+    "build": "tsc",
+    "lint": "tsc && eslint . --ext ts",
+    "polkadot": "node ./build/main.js Polkadot 2> logs/`date +%Y%m%d_%H%M_polkadot.err`",
+    "kusama": "node ./build/main.js Kusama 2> logs/`date +%Y%m%d_%H%M_kusama.err`",
+    "westend": "node ./build/main.js Westend 2> logs/`date +%Y%m%d_%H%M_westend.err`",
+    "dev": "tsc-watch --onSuccess \"node ./build/main.js\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@polkadot/api": "^1.31.1",
+    "@polkadot/calc-fee": "file:./calc-fee/pkg",
+    "@types/better-sqlite3": "^5.4.0",
+    "better-sqlite3-helper": "^3.1.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^3.5.0",
+    "@typescript-eslint/parser": "^3.7.1",
+    "eslint": "^7.5.0",
+    "tsc-watch": "^4.2.9",
+    "typescript": "^3.9.7"
+  }
+}
