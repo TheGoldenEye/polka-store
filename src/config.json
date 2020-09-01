@@ -8,7 +8,7 @@
         "wss://rpc.polkadot.io",
         "wss://cc1-1.polkadot.network"
       ],
-      "startBlock": 1286861
+      "startBlock": 892
     },
     "Kusama": {
       "providers": [
