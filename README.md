@@ -2,12 +2,12 @@
 
 ## 1 Overview
 
-Polka-store is a Node.js program written in typescript to store balance-relevant
-transactions from a Polkadot chain (Polkadot/Kusama/Westend) in a SQLite database.
+Polka-store is a Node.js program written in typescript which scans a Polkadot chain
+(Polkadot/Kusama/Westend) and stores balance-relevant transactions in a SQLite database.
 This database can be used in other projects to easily access the transaction data.
 What is balance-relevant? Currently the following data will be collected:
 
-- balance transfers
+- balance transfers (directly and through reserved balance)
 - fees
 - staking rewards
 - staking slashes
