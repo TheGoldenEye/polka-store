@@ -206,7 +206,20 @@ I welcome contributions. Before submitting your PR, make sure to run the followi
 - Used some parts of the "Substrate API Sidecar" project <https://github.com/paritytech/substrate-api-sidecar>  
   (Fee calculation tool and API-Handler)
 
-## 7 License
+## 7 Support me
+
+If you like my work, please consider to support me in Polkadot.  
+I would be happy if you nominate my validators in the Polkadot / Kusama networks:
+
+**Polkadot:**  
+1. [Validator GoldenEye](https://polkadot.subscan.io/account/14K71ECxvekU8BXGJmSQLed2XssM3HdBYQBuDUwHeUMUgBHk)
+2. [Validator GoldenEye/2](https://polkadot.subscan.io/account/13MjZA7vpcpxfGEUH2myFBkMxi3eSV2VUmActtUAFy2ESH4V)
+
+**Kusama:**  
+1. [Validator GoldenEye](https://kusama.subscan.io/account/FiNuPk2iPirbKC7Spse3NuE9rWjzaQonZmk6wRvk1LcEU13)
+2. [Validator GoldenEye/2](https://kusama.subscan.io/account/GcQXL1HgF1ZETZi3Tw3PoXGWeXbDpfsJrrgNgwxde4uoVaB)
+
+## 8 License
 
 Apache-2.0  
 Copyright (c) 2020 GoldenEye
