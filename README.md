@@ -158,7 +158,7 @@ There is currently no need to change the default configuration:
 **defchain:** The chain which is used (if no chain is given in the command line)  
 **_Chain specific settings:_**  
 **providers:** An array of websocket urls describing the nodes to connect. The program tries to connect the first node in list, if connection fails, the next one is used.  
-**startBlock:** The first block in the chain to be scanned. The standard values refer to the blocks with the first transactions.
+**startBlock:** The first block in the chain to be scanned. The default values refer to the blocks with the first transactions on chain.
 If the database is empty, the block scan starts at this block, if not, at the last block stored in the database.
 
 ### 3.2 Copy example database
