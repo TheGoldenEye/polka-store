@@ -2,8 +2,12 @@
 
 ## 1 Overview
 
-Polka-store is a Node.js program written in typescript which scans a Polkadot chain
-(Polkadot/Kusama/Westend) and stores balance-relevant transactions in a SQLite database.
+One of the most used functions of applications based on a blockchain is the evaluation of transactions.
+Unfortunately this is not possible in the Polkadot universe, because there the data not stored directly.  
+Ok, you can use the API of a block explorer, but latest if you want to follow the staking-rewards, that's it.
+
+**Polka-store** is a Node.js program written in typescript which scans a Polkadot chain
+(Polkadot/Kusama/Westend) and stores (hopefully all) balance-relevant transactions in a SQLite database.
 This database can be used in other projects to easily access the transaction data.
 What is balance-relevant? Currently the following data will be collected:
 
@@ -107,6 +111,8 @@ yarn
 
 ## 3 Configuration
 
+### 3.1 config.json
+
 Please find the configuration in src/config.json.
 Here are some parameters defined for the different chains.  
 There is currently no need to change the default configuration:
@@ -155,13 +161,24 @@ There is currently no need to change the default configuration:
 **startBlock:** The first block in the chain to be scanned. The standard values refer to the blocks with the first transactions.
 If the database is empty, the block scan starts at this block, if not, at the last block stored in the database.
 
+### 3.2 Copy example database
+
+If you do not want to start from scratch, you can copy the databases from the data/example
+directory to the data directory. The program will continue scanning the blockchain
+from the last block in the database.  
+If the data directory is empty, the database is created and the blockchain is scanned from the beginning.
+
 ## 4 Running
+
+### 4.1 Compile Typescript
 
 Now you have to build the code (compile typescript to javascript)
 
 ``` bash
 yarn build
 ```
+
+### 4.2 Start program
 
 **One** of the following commands starts the tool, collecting data from the **given** chain:
 
