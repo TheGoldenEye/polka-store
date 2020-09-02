@@ -1,5 +1,5 @@
 {
-  "name": "polkadot_api",
+  "name": "polka-store",
   "version": "1.0.0",
   "description": "Store balance-relevant transactions from a Polkadot chain in a database",
   "main": "main.js",
@@ -17,6 +17,7 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
+    "@jsbits/get-package-version": "^1.0.3",
     "@polkadot/api": "^1.31.1",
     "@polkadot/calc-fee": "file:./calc-fee/pkg",
     "@types/better-sqlite3": "^5.4.0",

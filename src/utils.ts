@@ -4,12 +4,15 @@ import { BlockHash, RuntimeDispatchInfo, RuntimeVersion } from '@polkadot/types/
 import { IBlock, IExtrinsic, ISanitizedEvent, IOnInitializeOrFinalize } from './types';
 import ApiHandler from './ApiHandler';
 import CTxDB, { TTransaction } from './db';
-
+import * as getPackageVersion from '@jsbits/get-package-version'
 
 // --------------------------------------------------------------
 // initialize polkadot API
 
 export async function InitAPI(providers: string[], expectedChain: string): Promise<ApiPromise> {
+
+  const ver = getPackageVersion();
+
   // Find suitable API provider
   let selProvider = "";
   let api: ApiPromise | undefined = undefined;
@@ -37,10 +40,12 @@ export async function InitAPI(providers: string[], expectedChain: string): Promi
     api.rpc.system.name(),
     api.rpc.system.version()
   ]);
-  console.log(`Chain:    "${chain}"`);
-  console.log(`Node:     "${nodeName}" version ${nodeVersion}`);
-  console.log(`Provider: "${selProvider}"`);
-  console.log(`API:      "${api.libraryInfo}"\n`);
+
+  console.log(`polka-store: v${ver}`);
+  console.log(`Chain:       ${chain}`);
+  console.log(`Node:        ${nodeName} v${nodeVersion}`);
+  console.log(`Provider:    ${selProvider}`);
+  console.log(`API:         ${api.libraryInfo}\n`);
 
   if (chain.toString() != expectedChain) {
     console.log('Wrong chain!\nGot "%s" chain, but expected "%s" chain.', chain.toString(), expectedChain);
