@@ -17,7 +17,6 @@
 import { ApiPromise } from '@polkadot/api';
 import { CalcFee } from '@polkadot/calc-fee';
 import { Metadata, Struct } from '@polkadot/types';
-import { getSpecTypes } from '@polkadot/types-known';
 import { GenericCall } from '@polkadot/types/generic';
 import {
 	DispatchInfo,
@@ -56,7 +55,7 @@ export default class ApiHandler {
 	}
 
 	async fetchBlock(hash: BlockHash): Promise<IBlock> {
-		const api = await this.ensureMeta(hash);
+		const { api } = this;
 		const [{ block }, events] = await Promise.all([
 			api.rpc.chain.getBlock(hash),
 			this.fetchEvents(api, hash),
@@ -305,7 +304,7 @@ export default class ApiHandler {
 		hash: BlockHash,
 		address: string
 	): Promise<IAccountBalanceInfo> {
-		const api = await this.ensureMeta(hash);
+		const { api } = this;
 
 		const [header, locks, sysAccount] = await Promise.all([
 			api.rpc.chain.getHeader(hash),
@@ -350,7 +349,7 @@ export default class ApiHandler {
 	 * @param hash BlockHash to make call at.
 	 */
 	async fetchStakingInfo(hash: BlockHash): Promise<IPalletStakingProgress> {
-		const api = await this.ensureMeta(hash);
+		const { api } = this;
 
 		const [
 			validatorCount,
@@ -452,7 +451,7 @@ export default class ApiHandler {
 		hash: BlockHash,
 		stash: string
 	): Promise<IAccountStakingInfo> {
-		const api = await this.ensureMeta(hash);
+		const { api } = this;
 
 		const [header, controllerOption] = await Promise.all([
 			api.rpc.chain.getHeader(hash),
@@ -510,7 +509,7 @@ export default class ApiHandler {
 		hash: BlockHash,
 		address: string
 	): Promise<IAccountVestingInfo> {
-		const api = await this.ensureMeta(hash);
+		const { api } = this;
 
 		const [header, vesting] = await Promise.all([
 			api.rpc.chain.getHeader(hash),
@@ -530,7 +529,7 @@ export default class ApiHandler {
 	}
 
 	async fetchMetadata(hash: BlockHash): Promise<Metadata> {
-		const api = await this.ensureMeta(hash);
+		const { api } = this;
 
 		const metadata = await api.rpc.state.getMetadata(hash);
 
@@ -541,7 +540,7 @@ export default class ApiHandler {
 		hash: BlockHash,
 		ethAddress: string
 	): Promise<null | { type: string }> {
-		const api = await this.ensureMeta(hash);
+		const { api } = this;
 		const agreementType = await api.query.claims.signing.at(
 			hash,
 			ethAddress
@@ -556,7 +555,7 @@ export default class ApiHandler {
 	}
 
 	async fetchTxArtifacts(hash: BlockHash): Promise<ITransactionMaterial> {
-		const api = await this.ensureMeta(hash);
+		const { api } = this;
 
 		const [
 			header,
@@ -592,7 +591,7 @@ export default class ApiHandler {
 		hash: BlockHash,
 		extrinsic: string
 	): Promise<RuntimeDispatchInfo> {
-		const api = await this.ensureMeta(hash);
+		const { api } = this;
 
 		try {
 			return await api.rpc.payment.queryInfo(extrinsic, hash);
@@ -610,7 +609,7 @@ export default class ApiHandler {
 	}
 
 	async submitTx(extrinsic: string): Promise<{ hash: Hash }> {
-		const api = await this.resetMeta();
+		const { api } = this;
 
 		let tx;
 
@@ -649,59 +648,6 @@ export default class ApiHandler {
 		} catch (_) {
 			return 'Unable to fetch Events, cannot confirm extrinsic status. Check pruning settings on the node.';
 		}
-	}
-
-	private async resetMeta(): Promise<ApiPromise> {
-		const { api } = this;
-
-		return await this.ensureMeta(await api.rpc.chain.getFinalizedHead());
-	}
-
-	private async ensureMeta(hash: BlockHash): Promise<ApiPromise> {
-		const { api } = this;
-		/* not needed from v1.31
-				try {
-					// we need the metadata from the block before, because changed blockSpec version applied after the block 
-					const header = await api.rpc.chain.getHeader(hash);
-					const prevHash = header.parentHash;
-		
-					const version = await api.rpc.state.getRuntimeVersion(prevHash);
-					const blockSpecVersion = version.specVersion;
-					const blockTxVersion = version.transactionVersion;
-		
-					// Swap metadata if tx version is different. This block of code should never execute, as
-					// specVersion always increases when txVersion increases, but specVersion may increase
-					// without an increase in txVersion. Defensive only.
-					if (
-						!this.txVersion.eq(blockTxVersion) &&
-						this.specVersion.eq(blockSpecVersion)
-					) {
-						console.warn('txVersion bumped without specVersion bumping');
-						this.txVersion = blockTxVersion;
-						const meta = await api.rpc.state.getMetadata(prevHash);
-						api.registry.setMetadata(meta);
-					}
-					// Swap metadata and confirm txVersion if specVersion is different.
-					else if (!this.specVersion.eq(blockSpecVersion)) {
-						this.specVersion = blockSpecVersion;
-						this.txVersion = blockTxVersion;
-						const meta = await api.rpc.state.getMetadata(prevHash);
-						const chain = await api.rpc.system.chain();
-		
-						api.registry.register(getSpecTypes(api.registry, chain, version.specName, blockSpecVersion));
-						api.registry.setMetadata(meta);
-					}
-				} catch (err) {
-					console.error(
-						// eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-						`Failed to get Metadata for block ${hash}, using latest.`
-					);
-					console.error(err);
-					this.specVersion = api.createType('u32', this.versionReset);
-					this.txVersion = api.createType('u32', this.versionReset);
-				}
-		*/
-		return api;
 	}
 
 	private parseArrayGenericCalls(
