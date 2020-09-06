@@ -74,6 +74,13 @@ export default class CTxDB {
   InsertTransactions(txs: TTransaction[]): number {
     if (!txs.length)
       return 0;
+
+    while (txs.length > 100) {
+      const txs1 = txs.slice(0, 100);
+      txs.splice(0, 100);
+      this.InsertTransactions(txs1);
+    }
+
     try {
       const ret = db().insert('transactions', txs);
       return ret;
