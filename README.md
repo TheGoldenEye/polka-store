@@ -168,6 +168,14 @@ directory to the data directory. The program will continue scanning the blockcha
 from the last block in the database.  
 If the data directory is empty, the database is created and the blockchain is scanned from the beginning.
 
+This is the status of the databases in the example directory:
+
+|  Database   | last Block |     date     |
+|:------------|:-----------|:-------------|
+| Polkadot.db | 1445471    | Sep  4, 2020 |
+| Kusama.db   | 1926746    | Apr 17, 2020 |
+| Westend.db  | 2082933    | Sep  4, 2020 |
+
 ## 4 Running
 
 ### 4.1 Compile Typescript
@@ -212,10 +220,12 @@ If you like my work, please consider to support me in Polkadot.
 I would be happy if you nominate my validators in the Polkadot / Kusama networks:
 
 **Polkadot:**  
+
 1. [Validator GoldenEye](https://polkadot.subscan.io/account/14K71ECxvekU8BXGJmSQLed2XssM3HdBYQBuDUwHeUMUgBHk)
 2. [Validator GoldenEye/2](https://polkadot.subscan.io/account/13MjZA7vpcpxfGEUH2myFBkMxi3eSV2VUmActtUAFy2ESH4V)
 
 **Kusama:**  
+
 1. [Validator GoldenEye](https://kusama.subscan.io/account/FiNuPk2iPirbKC7Spse3NuE9rWjzaQonZmk6wRvk1LcEU13)
 2. [Validator GoldenEye/2](https://kusama.subscan.io/account/GcQXL1HgF1ZETZi3Tw3PoXGWeXbDpfsJrrgNgwxde4uoVaB)
 
