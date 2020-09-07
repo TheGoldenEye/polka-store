@@ -16,19 +16,18 @@ export async function InitAPI(providers: string[], expectedChain: string): Promi
   // Find suitable API provider
   let selProvider = "";
   let api: ApiPromise | undefined = undefined;
-  let provider: WsProvider | undefined = undefined;
 
-  for (let i = 0, n = providers.length; i < n && !api; i++) {
+  for (let i = 0, n = providers.length; i < n && !api?.isConnected; i++) {
     try {
       selProvider = providers[i];
-      provider = new WsProvider(selProvider);
+      const provider = new WsProvider(selProvider);
 
-      // Create the API and wait until ready
-      api = await ApiPromise.create({ provider });
+      // Create the API and check if ready
+      api = new ApiPromise({ provider });
+      await api.isReadyOrError;
     }
     catch (e) {
-      if (provider)
-        provider.disconnect();
+      api?.disconnect();
     }
   }
   if (!api)

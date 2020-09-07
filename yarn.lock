@@ -67,7 +67,7 @@
     memoizee "^0.4.14"
     rxjs "^6.6.2"
 
-"@polkadot/api@1.32.1", "@polkadot/api@^1.31.1":
+"@polkadot/api@1.32.1", "@polkadot/api@^1.32.1":
   version "1.32.1"
   resolved "https://registry.yarnpkg.com/@polkadot/api/-/api-1.32.1.tgz#57fc14c47ebf624737437425f3019cd0f8d2b1b5"
   integrity sha512-YwqvD7lmH18xPFggwqpXAQHH0DmwQcePVGLHb5c9JjX9QxYqPS5r+Ed6lFPqTBTTiYhb1ep8QZrY7TrgceP41g==
