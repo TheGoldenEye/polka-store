@@ -170,7 +170,7 @@ If the data directory is empty, the database is created and the blockchain is sc
 
 This is the status of the databases in the example directory:
 
-|  Database   | last Block |     date     |
+|  Database   | Last Block |     Date     |
 |:------------|:-----------|:-------------|
 | Polkadot.db | 1445471    | Sep  4, 2020 |
 | Kusama.db   | 1926746    | Apr 17, 2020 |
@@ -199,7 +199,35 @@ yarn westend
 **Hint:** If you're connected to your own (or local) node, the chain of the node must match the given chain parameter.
 Otherwise the program is cancelled.
 
-## 5 Contributions
+## 5 Output
+
+The created SQLite database you can find (by default) in the data directory.  
+Here you can find the database structure:
+
+|  Column            | Description                                               |
+|:-------------------|:----------------------------------------------------------|
+| chain              | chain name                                                |
+| id                 | unique id                                                 |
+| height             | bock height                                               |
+| blockHash          | block hash                                                |
+| type               | extrinsic method                                          |
+| subType            | extrinsic submethod (e.g. in a 'utility.batch' extrinsic) |
+| event              | the event triggered by the extrinsic                      |
+| timestamp          | unix timestamp (in ms since Jan 1, 1970)                  |
+| specVersion        | runtime version                                           |
+| transactionVersion | transaction version                                       |
+| authorId           | the account id of the block validator                     |
+| senderId           | the account id of the block signer / transaction sender   |
+| recipientId        | the account id of the transaction recipient               |
+| amount             | the amount which was sent or rewarded                     |
+| partialFee         | the fee which was paid by the block signer                |
+| feeBalances        | the part of the fee that passed to the block author       |
+| feeTreasury        | the part of the fee that passed to the treasury           |
+| tip                | an additional tip paid by the block signer                |
+| paysFee            | a fee was paid                                            |
+| success            | the transaction was successfull                           |
+
+## 6 Contributions
 
 I welcome contributions. Before submitting your PR, make sure to run the following commands:
 
@@ -208,28 +236,28 @@ I welcome contributions. Before submitting your PR, make sure to run the followi
 
 <https://github.com/TheGoldenEye/polka-store/graphs/contributors>
 
-## 6 Authors
+## 7 Authors
 
 - GoldenEye
 - Used some parts of the "Substrate API Sidecar" project <https://github.com/paritytech/substrate-api-sidecar>  
   (Fee calculation tool and API-Handler)
 
-## 7 Support me
+## 8 Please support me
 
 If you like my work, please consider to support me in Polkadot.  
 I would be happy if you nominate my validators in the Polkadot / Kusama networks:
 
-**Polkadot:**  
+**Polkadot:**
 
 1. [Validator GoldenEye](https://polkadot.subscan.io/account/14K71ECxvekU8BXGJmSQLed2XssM3HdBYQBuDUwHeUMUgBHk)
 2. [Validator GoldenEye/2](https://polkadot.subscan.io/account/13MjZA7vpcpxfGEUH2myFBkMxi3eSV2VUmActtUAFy2ESH4V)
 
-**Kusama:**  
+**Kusama:**
 
 1. [Validator GoldenEye](https://kusama.subscan.io/account/FiNuPk2iPirbKC7Spse3NuE9rWjzaQonZmk6wRvk1LcEU13)
 2. [Validator GoldenEye/2](https://kusama.subscan.io/account/GcQXL1HgF1ZETZi3Tw3PoXGWeXbDpfsJrrgNgwxde4uoVaB)
 
-## 8 License
+## 9 License
 
 Apache-2.0  
 Copyright (c) 2020 GoldenEye
