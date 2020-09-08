@@ -18,7 +18,6 @@ CREATE TABLE if not exists "transactions" (
   "feeBalances"         BIGINT,
   "feeTreasury"         BIGINT,
   "tip"                 BIGINT,
-  "paysFee"             INTEGER,
   "success"             INTEGER,
   CONSTRAINT transactions_PK PRIMARY KEY (id));
 

@@ -165,7 +165,7 @@ If the database is empty, the block scan starts at this block, if not, at the la
 
 If you do not want to start from scratch, you can copy the databases from the data/example
 directory to the data directory. The program will continue scanning the blockchain
-from the last block in the database.  
+from the last block found in the database.  
 If the data directory is empty, the database is created and the blockchain is scanned from the beginning.
 
 This is the status of the databases in the example directory:
@@ -224,7 +224,6 @@ Here you can find the database structure:
 | feeBalances        | the part of the fee that passed to the block author       |
 | feeTreasury        | the part of the fee that passed to the treasury           |
 | tip                | an additional tip paid by the block signer                |
-| paysFee            | a fee was paid                                            |
 | success            | the transaction was successfull                           |
 
 ## 6 Contributions

@@ -126,7 +126,6 @@ function ProcessStakingSlashEvents(block: IBlock, onIF: IOnInitializeOrFinalize,
         feeBalances: undefined,
         feeTreasury: undefined,
         tip: undefined,
-        paysFee: undefined,
         success: undefined
       };
 
@@ -177,7 +176,6 @@ function ProcessGeneral(block: IBlock, ex: IExtrinsic, idxEx: number, db: CTxDB,
       feeBalances: undefined,
       feeTreasury: undefined,
       tip: BigInt(ex.tip),
-      paysFee: ex.paysFee ? 1 : 0,
       success: ex.success ? 1 : 0
     };
 
@@ -212,7 +210,6 @@ function ProcessTransferEvents(block: IBlock, ex: IExtrinsic, exIdx: number, ev:
       feeBalances: undefined,
       feeTreasury: undefined,
       tip: undefined,
-      paysFee: undefined,
       success: undefined
     };
 
@@ -244,7 +241,6 @@ function ProcessStakingRewardEvents(block: IBlock, ex: IExtrinsic, exIdx: number
       feeBalances: undefined,
       feeTreasury: undefined,
       tip: undefined,
-      paysFee: undefined,
       success: undefined
     };
 
@@ -276,7 +272,6 @@ function ProcessReserveRepatriatedEvents(block: IBlock, ex: IExtrinsic, exIdx: n
       feeBalances: undefined,
       feeTreasury: undefined,
       tip: undefined,
-      paysFee: undefined,
       success: undefined
     };
 
