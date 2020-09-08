@@ -71,7 +71,7 @@ export async function ProcessBlockDataH(api: ApiPromise, handler: ApiHandler, db
 export async function ProcessBlockDataB(api: ApiPromise, handler: ApiHandler, db: CTxDB, block: IBlock): Promise<void> {
   const txs: TTransaction[] = [];
 
-  const methodsToScan = ['utility.batch', 'proxy.proxy', 'staking.payoutStakers', 'balances.transfer', 'balances.transferKeepAlive']
+  const methodsToScan = ['utility.batch', 'proxy.proxy', 'multisig.asMulti', 'staking.payoutStakers', 'balances.transfer', 'balances.transferKeepAlive']
 
   // 1. process events attached directly to block
   ProcessStakingSlashEvents(block, block.onInitialize, db, txs);
@@ -145,8 +145,9 @@ function ProcessGeneral(block: IBlock, ex: IExtrinsic, idxEx: number, db: CTxDB,
     let subType: string | undefined = undefined;
     const method = ex.method;
     if (method == 'proxy.proxy' || method == 'utility.batch') {
-      if (ex.newArgs.call)
-        subType = ex.newArgs.call.method
+      if (ex.newArgs.call) {
+        subType = ex.newArgs.call.method;
+      }
       else if (ex.newArgs.calls) {
         const arr: string[] = [];
         ex.newArgs.calls.forEach(arg => {
