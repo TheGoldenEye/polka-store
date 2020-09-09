@@ -6,6 +6,13 @@ import ApiHandler from './ApiHandler';
 import CTxDB, { TTransaction } from './db';
 import * as getPackageVersion from '@jsbits/get-package-version'
 
+type TBlockData = {
+  api: ApiPromise,
+  block: IBlock,
+  db: CTxDB,
+  txs: TTransaction[],
+};
+
 // --------------------------------------------------------------
 // initialize polkadot API
 
@@ -69,56 +76,39 @@ export async function ProcessBlockDataH(api: ApiPromise, handler: ApiHandler, db
 // --------------------------------------------------------------
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export async function ProcessBlockDataB(api: ApiPromise, handler: ApiHandler, db: CTxDB, block: IBlock): Promise<void> {
-  const txs: TTransaction[] = [];
-
-  const methodsToScan = ['utility.batch', 'proxy.proxy', 'multisig.asMulti', 'staking.payoutStakers', 'balances.transfer', 'balances.transferKeepAlive']
-
-  // 1. process events attached directly to block
-  ProcessStakingSlashEvents(block, block.onInitialize, db, txs);
-
-  // 2. process extrinsics
-  for (let exIdx = 0, n = block.extrinsics.length; exIdx < n; exIdx++) {
-    const ex = block.extrinsics[exIdx];
-    const method = ex.method;
-
-    const ver = await api.rpc.state.getRuntimeVersion(block.parentHash);  // get runtime version of the block
-
-    // 2.1 process all signed transactions (stores the fee / tip)
-    ProcessGeneral(block, ex, exIdx, db, ver, txs);
-
-    // 2.2 process events attached to extrinsics
-    if (methodsToScan.includes(method)) {
-      ex.events.forEach((ev: ISanitizedEvent, evIdx: number) => {
-        //console.log(block.number + '-' + exIdx + '_ev' + evIdx, ev.method);
-
-        ProcessTransferEvents(block, ex, exIdx, ev, evIdx, db, txs);
-        ProcessStakingRewardEvents(block, ex, exIdx, ev, evIdx, db, txs);
-        ProcessReserveRepatriatedEvents(block, ex, exIdx, ev, evIdx, db, txs);
-      });
-    }
+  const data: TBlockData = {
+    api: api,
+    block: block,
+    txs: [],
+    db: db,
   }
 
-  db.InsertTransactions(txs);
+  await Promise.all([
+    ProcessStakingSlashEvents(data, block.onInitialize),    // 1. process events attached directly to block
+    ProcessExtrinsics(data)                                 // 2. process extrinsics
+  ])
+
+  db.InsertTransactions(data.txs);
 }
 
 // --------------------------------------------------------------
 // process block events
-function ProcessStakingSlashEvents(block: IBlock, onIF: IOnInitializeOrFinalize, db: CTxDB, txs: TTransaction[]): void {
+async function ProcessStakingSlashEvents(data: TBlockData, onIF: IOnInitializeOrFinalize): Promise<void> {
   onIF.events.forEach((ev: ISanitizedEvent, index: number) => {
     if (ev.method == 'staking.Slash') {
 
       const tx: TTransaction = {
-        chain: db.chain,
-        id: block.number + '_onInitialize_ev' + index,
-        height: Number(block.number),
-        blockHash: block.hash.toString(),
+        chain: data.db.chain,
+        id: data.block.number + '_onInitialize_ev' + index,
+        height: data.block.number.toNumber(),
+        blockHash: data.block.hash.toString(),
         type: ev.method,     // exceptionally we use here the event method, because there is no extrinsic
         subType: undefined,
         event: ev.method,
-        timestamp: GetTime(block.extrinsics),
+        timestamp: GetTime(data.block.extrinsics),
         specVersion: undefined,
         transactionVersion: undefined,
-        authorId: block.authorId ? block.authorId.toString() : undefined,
+        authorId: data.block.authorId?.toString(),
         senderId: ev.data[0].toString(),
         recipientId: undefined,
         amount: BigInt(ev.data[1]),
@@ -129,14 +119,43 @@ function ProcessStakingSlashEvents(block: IBlock, onIF: IOnInitializeOrFinalize,
         success: undefined
       };
 
-      txs.push(tx);
+      data.txs.push(tx);
     }
   });
 }
 
 // --------------------------------------------------------------
 // process general extrinsics
-function ProcessGeneral(block: IBlock, ex: IExtrinsic, idxEx: number, db: CTxDB, ver: RuntimeVersion, txs: TTransaction[]): void {
+async function ProcessExtrinsics(data: TBlockData): Promise<void> {
+
+  const methodsToScan = ['utility.batch', 'proxy.proxy', 'multisig.asMulti', 'staking.payoutStakers', 'balances.transfer', 'balances.transferKeepAlive']
+
+  const ver = await data.api.rpc.state.getRuntimeVersion(data.block.parentHash);  // get runtime version of the block
+
+  for (let exIdx = 0, n = data.block.extrinsics.length; exIdx < n; exIdx++) {
+    const ex = data.block.extrinsics[exIdx];
+    const method = ex.method;
+
+    // 1. process all signed transactions (stores the fee / tip)
+    ProcessGeneral(data, ex, exIdx, ver);
+
+    // 2. process events attached to extrinsics
+    if (methodsToScan.includes(method))
+      await Promise.all(ex.events.map(async (ev: ISanitizedEvent, evIdx: number) => {
+        await ProcessEvents(data, ex, exIdx, ev, evIdx);
+      }));
+    // sequential:
+    //if (methodsToScan.includes(method))
+    //  for (let i = 0, n = ex.events.length; i < n; i++)
+    //    await ProcessEvents(data, ex, exIdx, ex.events[i], i);
+  }
+
+
+}
+
+// --------------------------------------------------------------
+// process general extrinsics
+function ProcessGeneral(data: TBlockData, ex: IExtrinsic, idxEx: number, ver: RuntimeVersion): void {
 
   if (ex.signature) { // there is a signer
     const pf = (<RuntimeDispatchInfo>ex.info).partialFee;
@@ -158,21 +177,21 @@ function ProcessGeneral(block: IBlock, ex: IExtrinsic, idxEx: number, db: CTxDB,
     }
 
     const tx: TTransaction = {
-      chain: db.chain,
-      id: block.number + '-' + idxEx,
-      height: Number(block.number),
-      blockHash: block.hash.toString(),
+      chain: data.db.chain,
+      id: data.block.number + '-' + idxEx,
+      height: data.block.number.toNumber(),
+      blockHash: data.block.hash.toString(),
       type: method,
       subType: subType,
       event: undefined,
-      timestamp: GetTime(block.extrinsics),
+      timestamp: GetTime(data.block.extrinsics),
       specVersion: ver.specVersion.toNumber(),
       transactionVersion: ver.transactionVersion.toNumber(),
-      authorId: block.authorId ? block.authorId.toString() : undefined,
+      authorId: data.block.authorId?.toString(),
       senderId: ex.signature.signer.toString(),
       recipientId: undefined,
       amount: undefined,
-      partialFee: pf ? BigInt(pf) : undefined,  // pf can be undefined: maybe "Fee calculation not supported for westend#8"
+      partialFee: pf ? BigInt(pf) : undefined,  // pf can be undefined: maybe because "Fee calculation not supported for westend#8"
       feeBalances: undefined,
       feeTreasury: undefined,
       tip: BigInt(ex.tip),
@@ -181,25 +200,37 @@ function ProcessGeneral(block: IBlock, ex: IExtrinsic, idxEx: number, db: CTxDB,
 
     GetFee2(ex, tx); // calculate 2nd fee based on balances.Deposit and treasury.Deposit events
 
-    txs.push(tx);
+    data.txs.push(tx);
   }
 }
 
 
 // --------------------------------------------------------------
+// process all event
+async function ProcessEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number): Promise<void> {
+  //console.log(data.block.number + '-' + exIdx + '_ev' + evIdx, ev.method);
+
+  await Promise.all([
+    ProcessTransferEvents(data, ex, exIdx, ev, evIdx),
+    ProcessStakingRewardEvents(data, ex, exIdx, ev, evIdx),
+    ProcessReserveRepatriatedEvents(data, ex, exIdx, ev, evIdx)
+  ]);
+}
+
+// --------------------------------------------------------------
 // process transfer events
-function ProcessTransferEvents(block: IBlock, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number, db: CTxDB, txs: TTransaction[]): void {
+async function ProcessTransferEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number): Promise<void> {
   if (ev.method == 'balances.Transfer') {
 
     const tx: TTransaction = {
-      chain: db.chain,
-      id: block.number + '-' + exIdx + '_ev' + evIdx,
-      height: Number(block.number),
-      blockHash: block.hash.toString(),
+      chain: data.db.chain,
+      id: data.block.number + '-' + exIdx + '_ev' + evIdx,
+      height: data.block.number.toNumber(),
+      blockHash: data.block.hash.toString(),
       type: ex.method,
       subType: undefined,
       event: ev.method,
-      timestamp: GetTime(block.extrinsics),
+      timestamp: GetTime(data.block.extrinsics),
       specVersion: undefined,
       transactionVersion: undefined,
       authorId: undefined,
@@ -213,29 +244,39 @@ function ProcessTransferEvents(block: IBlock, ex: IExtrinsic, exIdx: number, ev:
       success: undefined
     };
 
-    txs.push(tx);
+    data.txs.push(tx);
   }
 }
 
 // --------------------------------------------------------------
 // process staking.Reward events
-function ProcessStakingRewardEvents(block: IBlock, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number, db: CTxDB, txs: TTransaction[]): void {
+async function ProcessStakingRewardEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number): Promise<void> {
   if (ev.method == 'staking.Reward') {
 
+    const stashId = ev.data[0].toString();  // AcountID of validator
+    let payee = stashId;                    // init payee
+
+    // get reward destination from api
+    const rd = await data.api.query.staking.payee.at(data.block.hash, stashId);
+    if (rd.isAccount)                       // reward dest: an explicitely given account 
+      payee = rd.asAccount.toString();
+    else if (rd.isController)               // reward dest: the controller account
+      payee = (await data.api.query.staking.bonded.at(data.block.hash, stashId)).toString();
+
     const tx: TTransaction = {
-      chain: db.chain,
-      id: block.number + '-' + exIdx + '_ev' + evIdx,
-      height: Number(block.number),
-      blockHash: block.hash.toString(),
+      chain: data.db.chain,
+      id: data.block.number + '-' + exIdx + '_ev' + evIdx,
+      height: data.block.number.toNumber(),
+      blockHash: data.block.hash.toString(),
       type: ex.method,
       subType: undefined,
       event: ev.method,
-      timestamp: GetTime(block.extrinsics),
+      timestamp: GetTime(data.block.extrinsics),
       specVersion: undefined,
       transactionVersion: undefined,
       authorId: undefined,
       senderId: undefined,
-      recipientId: ev.data[0].toString(),
+      recipientId: payee,
       amount: BigInt(ev.data[1]),
       partialFee: undefined,
       feeBalances: undefined,
@@ -244,24 +285,24 @@ function ProcessStakingRewardEvents(block: IBlock, ex: IExtrinsic, exIdx: number
       success: undefined
     };
 
-    txs.push(tx);
+    data.txs.push(tx);
   }
 }
 
 // --------------------------------------------------------------
 // process balance.ReserveRepatriated events (use reserved funds)
-function ProcessReserveRepatriatedEvents(block: IBlock, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number, db: CTxDB, txs: TTransaction[]): void {
+async function ProcessReserveRepatriatedEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number): Promise<void> {
   if (ev.method == 'balances.ReserveRepatriated') {
 
     const tx: TTransaction = {
-      chain: db.chain,
-      id: block.number + '-' + exIdx + '_ev' + evIdx,
-      height: Number(block.number),
-      blockHash: block.hash.toString(),
+      chain: data.db.chain,
+      id: data.block.number + '-' + exIdx + '_ev' + evIdx,
+      height: data.block.number.toNumber(),
+      blockHash: data.block.hash.toString(),
       type: ex.method,
       subType: undefined,
       event: ev.method,
-      timestamp: GetTime(block.extrinsics),
+      timestamp: GetTime(data.block.extrinsics),
       specVersion: undefined,
       transactionVersion: undefined,
       authorId: undefined,
@@ -275,7 +316,7 @@ function ProcessReserveRepatriatedEvents(block: IBlock, ex: IExtrinsic, exIdx: n
       success: undefined
     };
 
-    txs.push(tx);
+    data.txs.push(tx);
   }
 }
 
@@ -319,7 +360,7 @@ export default class CLogBlockNr {
     const diff = d.getTime() - this._lastLoggingTime.getTime();
     if (force || diff >= minTime) {
       const header = await this._api.rpc.chain.getHeader();
-      this._lastBlock = Number(header.number);
+      this._lastBlock = header.number.toNumber();
 
       const timePerBlock = Math.round(diff * 10 / (blockNr - this._lastLoggedBlock)) / 10;  // rounded to one decimal place
       const timeLeft = Math.floor(timePerBlock * (this._lastBlock - blockNr) / 1000);
