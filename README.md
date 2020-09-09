@@ -226,7 +226,16 @@ Here you can find the database structure:
 | tip                | an additional tip paid by the block signer                |
 | success            | the transaction was successfull                           |
 
-## 6 Contributions
+## 6 Known issues
+
+- The 'multisig.asMulti' extrinsic is currently not specially treated.
+Transfers resulting from this are currently missing in the database.
+- The 'staking.Reward' event contains the stash account in each case.
+If the reward destination is set to the controller account, this is not handled correctly.
+
+**Hint:** The ussues above only concern the sample databases, the program code has already been fixed.
+
+## 7 Contributions
 
 I welcome contributions. Before submitting your PR, make sure to run the following commands:
 
@@ -235,13 +244,13 @@ I welcome contributions. Before submitting your PR, make sure to run the followi
 
 <https://github.com/TheGoldenEye/polka-store/graphs/contributors>
 
-## 7 Authors
+## 8 Authors
 
 - GoldenEye
 - Used some parts of the "Substrate API Sidecar" project <https://github.com/paritytech/substrate-api-sidecar>  
   (Fee calculation tool and API-Handler)
 
-## 8 Please support me
+## 9 Please support me
 
 If you like my work, please consider to support me in Polkadot.  
 I would be happy if you nominate my validators in the Polkadot / Kusama networks:
@@ -256,7 +265,7 @@ I would be happy if you nominate my validators in the Polkadot / Kusama networks
 1. [Validator GoldenEye](https://kusama.subscan.io/account/FiNuPk2iPirbKC7Spse3NuE9rWjzaQonZmk6wRvk1LcEU13)
 2. [Validator GoldenEye/2](https://kusama.subscan.io/account/GcQXL1HgF1ZETZi3Tw3PoXGWeXbDpfsJrrgNgwxde4uoVaB)
 
-## 9 License
+## 10 License
 
 Apache-2.0  
 Copyright (c) 2020 GoldenEye
