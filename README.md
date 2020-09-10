@@ -30,6 +30,7 @@ Please install the LFS git extension before cloning the repository.
 **Hint:** You only need to install LFS once per user account.
 
 ``` bash
+sudo apt install git-lfs
 git lfs install
 git clone https://github.com/TheGoldenEye/polka-store.git
 ```
