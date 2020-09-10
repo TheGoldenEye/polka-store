@@ -172,9 +172,9 @@ This is the status of the databases in the example directory:
 
 |  Database   | Last Block |     Date     |
 |:------------|:-----------|:-------------|
-| Polkadot.db | 1445471    | Sep  4, 2020 |
-| Kusama.db   | 1926746    | Apr 17, 2020 |
-| Westend.db  | 2082933    | Sep  4, 2020 |
+| Polkadot.db | 1524576    | Sep 10, 2020 |
+| Kusama.db   | 3983032    | Sep 10, 2020 |
+| Westend.db  | 2158149    | Sep 10, 2020 |
 
 ## 4 Running
 
