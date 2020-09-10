@@ -31,7 +31,7 @@ Please install the LFS git extension before cloning the repository.
 
 ``` bash
 sudo apt install git-lfs
-git lfs install
+git lfs install --skip-repo
 git clone https://github.com/TheGoldenEye/polka-store.git
 ```
 
