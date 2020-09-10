@@ -24,9 +24,13 @@ These steps should only be carried out during the initial installation.
 
 #### 2.1.1 Repository
 
-Clone the repository:
+The repository uses [Git Large File Storage (LFS)](https://git-lfs.github.com) for
+provisioning the large example databases.
+Please install the LFS git extension before cloning the repository.  
+**Hint:** You only need to install LFS once per user account.
 
 ``` bash
+git lfs install
 git clone https://github.com/TheGoldenEye/polka-store.git
 ```
 
@@ -233,7 +237,7 @@ Transfers resulting from this are currently missing in the database.
 - The 'staking.Reward' event contains the stash account in each case.
 If the reward destination is set to the controller account, this is not handled correctly.
 
-**Hint:** The ussues above only concern the sample databases, the program code has already been fixed.
+**Hint:** The issues above only concern the sample databases, the program code has already been fixed.
 
 ## 7 Contributions
 
