@@ -231,12 +231,12 @@ Here you can find the database structure:
 
 ## 6 Known issues
 
+**Hint:** The issues only concern the sample databases, the program code has already been fixed.
+
 - The 'multisig.asMulti' extrinsic is currently not specially treated.
 Transfers resulting from this are currently missing in the database.
 - The 'staking.Reward' event contains the stash account in each case.
 If the reward destination is set to the controller account, this is not handled correctly.
-
-**Hint:** The issues above only concern the sample databases, the program code has already been fixed.
 
 ## 7 Contributions
 
