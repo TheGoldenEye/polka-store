@@ -2,8 +2,9 @@
 
 ## 1 Overview
 
-One of the most used functions of applications based on a blockchain is the evaluation of transactions.
-Unfortunately this is not possible in the Polkadot universe, because there the data not stored directly.  
+One of the most used functions of applications based on a blockchain is the
+evaluation of transactions. Unfortunately this is not possible in the Polkadot
+universe, because these data are not directly stored there.  
 Ok, you can use the API of a block explorer, but latest if you want to follow the staking-rewards, that's it.
 
 **Polka-store** is a Node.js program written in typescript which scans a Polkadot chain
@@ -24,14 +25,9 @@ These steps should only be carried out during the initial installation.
 
 #### 2.1.1 Repository
 
-The repository uses [Git Large File Storage (LFS)](https://git-lfs.github.com) for
-provisioning the large example databases.
-Please install the LFS git extension before cloning the repository.  
-**Hint:** You only need to install LFS once per user account.
+First you have to clone the repository:  
 
 ``` bash
-sudo apt install git-lfs
-git lfs install --skip-repo
 git clone https://github.com/TheGoldenEye/polka-store.git
 ```
 
@@ -110,7 +106,7 @@ Please always run this when the sources have been updated from the git repositor
 Use yarn to install the dependencies:
 
 ``` bash
-[cd polka-store]
+cd polka-store
 yarn
 ```
 
@@ -159,7 +155,8 @@ There is currently no need to change the default configuration:
 ```
 
 **_Global settings:_**  
-**filename:** The path to the sqlite database, the (empty) default means "data/\<chainname\>.db"  
+**filename:** The path to the sqlite database, the (empty) default means, the
+filename is set automatically: "data/\<chainname\>.db"  
 **defchain:** The chain which is used (if no chain is given in the command line)  
 **_Chain specific settings:_**  
 **providers:** An array of websocket urls describing the nodes to connect. The program tries to connect the first node in list, if connection fails, the next one is used.  
@@ -168,18 +165,19 @@ If the database is empty, the block scan starts at this block, if not, at the la
 
 ### 3.2 Copy example database
 
-If you do not want to start from scratch, you can copy the databases from the data/example
-directory to the data directory. The program will continue scanning the blockchain
-from the last block found in the database.  
-If the data directory is empty, the database is created and the blockchain is scanned from the beginning.
+If you do not want to start from scratch, you can copy my provided example
+databases to the data directory. The program will continue scanning the blockchain
+starting from the last block found in the database.  
+If the data directory is empty, a new database is created and the blockchain is
+scanned from the beginning.
 
-This is the status of the databases in the example directory:
+Available example databases:
 
-|  Database   | Last Block |     Date     |
-|:------------|:-----------|:-------------|
-| Polkadot.db | 1524576    | Sep 10, 2020 |
-| Kusama.db   | 3983032    | Sep 10, 2020 |
-| Westend.db  | 2158149    | Sep 10, 2020 |
+|  Database   | Last Block |     Date     |   Download   |
+|:------------|:-----------|:-------------|:-------------|
+| Polkadot.db | 1524576    | Sep 10, 2020 | [Polkadot.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)  |
+| Kusama.db   | 3983032    | Sep 10, 2020 | [Kusama.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)    |
+| Westend.db  | 2158149    | Sep 10, 2020 | [Westend.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)   |
 
 ## 4 Running
 
