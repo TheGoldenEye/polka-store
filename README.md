@@ -4,7 +4,7 @@
 
 One of the most used functions of applications based on a blockchain is the
 evaluation of transactions. Unfortunately this is not possible in the Polkadot
-universe, because these data are not directly stored there.  
+universe, because transaction data are not directly stored there.  
 Ok, you can use the API of a block explorer, but latest if you want to follow the staking-rewards, that's it.
 
 **Polka-store** is a Node.js program written in typescript which scans a Polkadot chain
@@ -175,9 +175,9 @@ Available example databases:
 
 |  Database   | Last Block |     Date     |   Download   |
 |:------------|:-----------|:-------------|:-------------|
-| Polkadot.db | 1524576    | Sep 10, 2020 | [Polkadot.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)  |
+| Polkadot.db | 1579854    | Sep 13, 2020 | [Polkadot.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)  |
 | Kusama.db   | 3983032    | Sep 10, 2020 | [Kusama.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)    |
-| Westend.db  | 2158149    | Sep 10, 2020 | [Westend.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)   |
+| Westend.db  | 2213022    | Sep 13, 2020 | [Westend.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)   |
 
 ## 4 Running
 
@@ -231,7 +231,7 @@ Here you can find the database structure:
 
 ## 6 Known issues
 
-**Hint:** The issues only concern the sample databases, the program code has already been fixed.
+**Hint:** The issues only concern the kusama sample database, the program code has already been fixed.
 
 - The 'multisig.asMulti' extrinsic is currently not specially treated.
 Transfers resulting from this are currently missing in the database.
