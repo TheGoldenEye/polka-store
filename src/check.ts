@@ -30,9 +30,12 @@ async function main() {
 
   console.log('##########################################',);
   console.log('Chain:', chain);
+  if (!chainData.check_accounts.length)
+    console.log('  no accounts given');
+
 
   // iterate over all test accounts
-  chainData.test_accounts.forEach((accountID: string) => {
+  chainData.check_accounts.forEach((accountID: string) => {
     const lastBlock = db().queryFirstRow('SELECT max(height) AS val FROM transactions').val;
     const feesReceived = db().queryFirstRow('SELECT sum(feeBalances) AS val FROM transactions WHERE authorId=?', accountID).val;
     //const feesPaid = db().queryFirstRow('SELECT COALESCE(sum(partialFee), 0)+COALESCE(sum(tip), 0) AS val FROM transactions WHERE senderId=?', accountID).val;
