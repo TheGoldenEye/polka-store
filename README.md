@@ -17,6 +17,8 @@ What is balance-relevant? Currently the following data will be collected:
 - staking rewards
 - staking slashes
 
+Btw, you can download regularly updated example databases from my file storage linked below.
+
 ## 2 Installation
 
 ### 2.1 Prerequisites
@@ -129,7 +131,9 @@ There is currently no need to change the default configuration:
         "wss://rpc.polkadot.io",
         "wss://cc1-1.polkadot.network"
       ],
-      "startBlock": 892
+      "startBlock": 892,
+      "PlanckPerUnit" : 1e10,
+      "check_accounts": []
     },
     "Kusama": {
       "providers": [
@@ -141,14 +145,18 @@ There is currently no need to change the default configuration:
         "wss://cc3-4.kusama.network",
         "wss://cc3-5.kusama.network"
       ],
-      "startBlock": 3876
+      "startBlock": 3876,
+      "PlanckPerUnit" : 1e12,
+      "check_accounts": []
     },
     "Westend": {
       "providers": [
         "ws://127.0.0.1:9944",
         "wss://westend-rpc.polkadot.io"
       ],
-      "startBlock": 1191
+      "startBlock": 1191,
+      "PlanckPerUnit" : 1e12,
+      "check_accounts": []
     }
   }
 }
@@ -161,7 +169,9 @@ filename is set automatically: "data/\<chainname\>.db"
 **_Chain specific settings:_**  
 **providers:** An array of websocket urls describing the nodes to connect. The program tries to connect the first node in list, if connection fails, the next one is used.  
 **startBlock:** The first block in the chain to be scanned. The default values refer to the blocks with the first transactions on chain.
-If the database is empty, the block scan starts at this block, if not, at the last block stored in the database.
+If the database is empty, the block scan starts at this block, if not, at the last block stored in the database.  
+**PlanckPerUnit:** Defines the number of Plancks per DOT/KSM/WND, or simply the count of decimal places  
+**check_accounts:** A list of accounts used in check mode (see below)
 
 ### 3.2 Copy example database
 
@@ -238,7 +248,33 @@ Transfers resulting from this are currently missing in the database.
 - The 'staking.Reward' event contains the stash account in each case.
 If the reward destination is set to the controller account, this is not handled correctly.
 
-## 7 Contributions
+## 7 Check mode
+
+To make sure that I have all balance relevant transactions in the database,
+I implemented a check mode. You can configure several accounts to check in config.json:
+
+``` bash
+"check_accounts": [
+        "14K61ECxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "165jxPGyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+        "14GYRjnzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+      ]
+```
+
+After configuring the accounts, you can start the check mode with one of the following commands:
+
+``` bash
+yarn check_polkadot
+yarn check_kusama
+yarn check_westend
+```
+
+For each account the balance at block xxxx (last block in database) will be
+calculated based on the database entries. Please check the results with the real
+balances and report possible missing transactions or issues.  
+Thank you for your support!
+
+## 8 Contributions
 
 I welcome contributions. Before submitting your PR, make sure to run the following commands:
 
@@ -247,13 +283,13 @@ I welcome contributions. Before submitting your PR, make sure to run the followi
 
 <https://github.com/TheGoldenEye/polka-store/graphs/contributors>
 
-## 8 Authors
+## 9 Authors
 
 - GoldenEye
 - Used some parts of the "Substrate API Sidecar" project <https://github.com/paritytech/substrate-api-sidecar>  
   (Fee calculation tool and API-Handler)
 
-## 9 Please support me
+## 10 Please support me
 
 If you like my work, please consider to support me in Polkadot.  
 I would be happy if you nominate my validators in the Polkadot / Kusama networks:
@@ -268,7 +304,7 @@ I would be happy if you nominate my validators in the Polkadot / Kusama networks
 1. [Validator GoldenEye](https://kusama.subscan.io/account/FiNuPk2iPirbKC7Spse3NuE9rWjzaQonZmk6wRvk1LcEU13)
 2. [Validator GoldenEye/2](https://kusama.subscan.io/account/GcQXL1HgF1ZETZi3Tw3PoXGWeXbDpfsJrrgNgwxde4uoVaB)
 
-## 10 License
+## 11 License
 
 Apache-2.0  
 Copyright (c) 2020 GoldenEye

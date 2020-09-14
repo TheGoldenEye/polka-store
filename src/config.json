@@ -8,7 +8,9 @@
         "wss://rpc.polkadot.io",
         "wss://cc1-1.polkadot.network"
       ],
-      "startBlock": 892
+      "startBlock": 892,
+      "PlanckPerUnit" : 1e10,
+      "check_accounts": []
     },
     "Kusama": {
       "providers": [
@@ -20,14 +22,18 @@
         "wss://cc3-4.kusama.network",
         "wss://cc3-5.kusama.network"
       ],
-      "startBlock": 3876
+      "startBlock": 3876,
+      "PlanckPerUnit" : 1e12,
+      "check_accounts": []
     },
     "Westend": {
       "providers": [
         "ws://127.0.0.1:9944",
         "wss://westend-rpc.polkadot.io"
       ],
-      "startBlock": 1191
+      "startBlock": 1191,
+      "PlanckPerUnit" : 1e12,
+      "check_accounts": []
     }
   }
 }
