@@ -82,12 +82,15 @@ export default class CTxDB {
     }
 
     try {
+      // if we continue an existing database we remove (possibly corrupted) existing records with the same block number
+      if (txs[0].height == this._maxHeight)
+        db().run('DELETE FROM transactions WHERE height>=?', this._maxHeight);
+
       const ret = db().insert('transactions', txs);
       return ret;
     }
     catch (e) {
-      if ((e.code != 'SQLITE_CONSTRAINT_PRIMARYKEY') || (txs[0].height > this._maxHeight)) // ignore constraint error in the first block processed
-        console.error((e as Error).message, txs);
+      console.error((e as Error).message, txs);
       return 0;
     }
   }
