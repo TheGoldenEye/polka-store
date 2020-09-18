@@ -21,7 +21,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@jsbits/get-package-version": "^1.0.3",
-    "@polkadot/api": "^1.32.1",
+    "@polkadot/api": "^1.34.0-beta.12",
     "@polkadot/calc-fee": "file:./calc-fee/pkg",
     "@types/better-sqlite3": "^5.4.0",
     "better-sqlite3-helper": "^3.1.0"
