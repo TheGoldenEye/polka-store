@@ -46,9 +46,9 @@ async function main() {
     const accountID = chainData.check_accounts[i];
     const lastBlock = db().queryFirstRow('SELECT max(height) AS val FROM transactions').val;
     const feesReceived = db().queryFirstRow('SELECT sum(feeBalances) AS val FROM transactions WHERE authorId=?', accountID).val;
-    // feesPaid calculated from feeBalances and feeTreasury
+    // feesPaid1 calculated from feeBalances and feeTreasury
     const feesPaid1 = db().queryFirstRow('SELECT COALESCE(sum(feeBalances), 0)+COALESCE(sum(feeTreasury), 0) AS val FROM transactions WHERE senderId=?', accountID).val;
-    // feesPaid calculated from partialFee
+    // feesPaid2 calculated from partialFee
     const feesPaid2 = db().queryFirstRow('SELECT COALESCE(sum(partialFee), 0)+COALESCE(sum(tip), 0) AS val FROM transactions WHERE senderId=?', accountID).val;
     const paid = db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE senderId=?', accountID).val;
     const received = db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE recipientId=?', accountID).val;
@@ -62,13 +62,13 @@ async function main() {
     console.log('------------------------------------------',);
     console.log('AccointID:   ', accountID);
     console.log('feesReceived:', feesReceived / plancks);
-    console.log('feesPaid1:   ', feesPaid1 / plancks, '(calculated from partialFee)');
-    console.log('feesPaid2:   ', feesPaid2 / plancks, '(calculated from feeBalances and feeTreasury)');
+    console.log('feesPaid1:   ', feesPaid1 / plancks, '(calculated from feeBalances and feeTreasury)');
+    console.log('feesPaid2:   ', feesPaid2 / plancks, '(calculated from partialFee)');
     console.log('paid:        ', paid / plancks);
     console.log('received:    ', received / plancks);
-    console.log('Balance at Block %d: %d', lastBlock, total1 / plancks, '(calculated with feesPaid1)');
-    console.log('Balance at Block %d: %d', lastBlock, total2 / plancks, '(calculated with feesPaid2)');
-    console.log('Balance at Block %d: %d', lastBlock, balance.free.toNumber() / plancks, '(from API)');
+    console.log('Balance at Block %d: %d', lastBlock, total1 / plancks, '(calculated from feeBalances and feeTreasury)');
+    console.log('Balance at Block %d: %d', lastBlock, total2 / plancks, '(calculated from partialFee)');
+    console.log('Balance at Block %d: %d', lastBlock, (balance.reserved.toNumber() + balance.free.toNumber()) / plancks, '(from API)');
   }
 
 }
