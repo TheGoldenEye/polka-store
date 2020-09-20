@@ -13,6 +13,8 @@ type TBlockData = {
   txs: TTransaction[],
 };
 
+let currentBlockNr = -1;
+
 // --------------------------------------------------------------
 // initialize polkadot API
 
@@ -40,6 +42,15 @@ export async function InitAPI(providers: string[], expectedChain: string): Promi
   if (!api)
     throw ('Cannot find suitable provider to connect');
 
+  api.on('error', (err) => {
+    if (err.message) {
+      if (currentBlockNr < 0)
+        console.error(err.message)
+      else
+        console.error('BlockNr:', currentBlockNr, err.message)
+    }
+  });
+
   // Retrieve the chain & node information information via rpc calls
   const [chain, nodeName, nodeVersion] = await Promise.all([
     api.rpc.system.chain(),
@@ -63,6 +74,7 @@ export async function InitAPI(providers: string[], expectedChain: string): Promi
 
 // --------------------------------------------------------------
 export async function ProcessBlockData(api: ApiPromise, handler: ApiHandler, db: CTxDB, blockNr: number): Promise<void> {
+  currentBlockNr = blockNr;
   const hash = await api.rpc.chain.getBlockHash(blockNr);
   return ProcessBlockDataH(api, handler, db, hash);
 }
@@ -112,6 +124,7 @@ async function ProcessStakingSlashEvents(data: TBlockData, onIF: IOnInitializeOr
         senderId: ev.data[0].toString(),
         recipientId: undefined,
         amount: BigInt(ev.data[1]),
+        //        totalFee: undefined,
         partialFee: undefined,
         feeBalances: undefined,
         feeTreasury: undefined,
@@ -193,6 +206,7 @@ function ProcessGeneral(data: TBlockData, ex: IExtrinsic, idxEx: number, ver: Ru
       senderId: ex.signature.signer.toString(),
       recipientId: undefined,
       amount: undefined,
+      //      totalFee: undefined,
       partialFee: pf ? BigInt(pf) : undefined,  // pf can be undefined: maybe because "Fee calculation not supported for westend#8"
       feeBalances: undefined,
       feeTreasury: undefined,
@@ -200,7 +214,7 @@ function ProcessGeneral(data: TBlockData, ex: IExtrinsic, idxEx: number, ver: Ru
       success: ex.success ? 1 : 0
     };
 
-    GetFee2(ex, tx); // calculate 2nd fee based on balances.Deposit and treasury.Deposit events
+    CalcTotalFee(ex, tx); // calculate totalFee fee based on balances.Deposit and treasury.Deposit events
 
     data.txs.push(tx);
   }
@@ -239,6 +253,7 @@ async function ProcessTransferEvents(data: TBlockData, ex: IExtrinsic, exIdx: nu
       senderId: ev.data[0].toString(),
       recipientId: ev.data[1].toString(),
       amount: BigInt(ev.data[2]),
+      //      totalFee: undefined,
       partialFee: undefined,
       feeBalances: undefined,
       feeTreasury: undefined,
@@ -280,6 +295,7 @@ async function ProcessStakingRewardEvents(data: TBlockData, ex: IExtrinsic, exId
       senderId: undefined,
       recipientId: payee,
       amount: BigInt(ev.data[1]),
+      //      totalFee: undefined,
       partialFee: undefined,
       feeBalances: undefined,
       feeTreasury: undefined,
@@ -311,6 +327,7 @@ async function ProcessReserveRepatriatedEvents(data: TBlockData, ex: IExtrinsic,
       senderId: ev.data[0].toString(),
       recipientId: ev.data[1].toString(),
       amount: BigInt(ev.data[2]),
+      //      totalFee: undefined,
       partialFee: undefined,
       feeBalances: undefined,
       feeTreasury: undefined,
@@ -324,7 +341,8 @@ async function ProcessReserveRepatriatedEvents(data: TBlockData, ex: IExtrinsic,
 
 // --------------------------------------------------------------
 // looks for balance.Deposit method with fee infomation and sets this in tx
-function GetFee2(ex: IExtrinsic, tx: TTransaction): boolean {
+// calculates totalFee as sum of feeBalances and feeTreasury
+function CalcTotalFee(ex: IExtrinsic, tx: TTransaction): boolean {
   if (ex.paysFee)
     ex.events.forEach((ev: ISanitizedEvent) => {
       if (ev.method == 'balances.Deposit') {
@@ -334,6 +352,9 @@ function GetFee2(ex: IExtrinsic, tx: TTransaction): boolean {
         tx.feeTreasury = BigInt(ev.data[0]);
       }
     });
+
+  //  if (tx.feeBalances || tx.feeTreasury)
+  //    tx.totalFee = (tx.feeBalances || BigInt(0)) + (tx.feeTreasury || BigInt(0));
   return !ex.paysFee || (tx.feeBalances != undefined);
 }
 
