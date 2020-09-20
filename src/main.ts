@@ -8,6 +8,8 @@ import * as config from './config.json';
 // --------------------------------------------------------------
 async function main() {
 
+  process.on('SIGINT', () => process.exit()); // Ctrl+C pressed
+
   const chain = process.argv[2] || config.defchain;
   const chainData = config.chains[chain];
   if (!chainData) {

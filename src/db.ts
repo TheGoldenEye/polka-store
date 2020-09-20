@@ -7,7 +7,7 @@ const db = require('better-sqlite3-helper');
 export type TTransaction = {
   chain: string, id: string, height: number, blockHash: string, type: string, subType: string | undefined, event: string | undefined, timestamp: number,
   specVersion: number | undefined, transactionVersion: number | undefined, authorId: string | undefined, senderId: string | undefined, recipientId: string | undefined,
-  amount: bigint | undefined, partialFee: bigint | undefined, feeBalances: bigint | undefined, feeTreasury: bigint | undefined, tip: bigint | undefined, success: number | undefined
+  amount: bigint | undefined, /*totalFee: bigint | undefined,*/ partialFee: bigint | undefined, feeBalances: bigint | undefined, feeTreasury: bigint | undefined, tip: bigint | undefined, success: number | undefined
 };
 
 export default class CTxDB {
@@ -21,7 +21,7 @@ export default class CTxDB {
       path: './data/sqlite3.db', // this is the default
       readonly: false, // read only
       fileMustExist: false, // throw error if database not exists
-      WAL: false, // automatically enable 'PRAGMA journal_mode = WAL'?
+      WAL: true, // automatically enable 'PRAGMA journal_mode = WAL'?
       migrate: {  // disable completely by setting `migrate: false`
         force: false, // set to 'last' to automatically reapply the last migration-file
         table: 'migration', // name of the database table that is used to keep track
@@ -35,6 +35,8 @@ export default class CTxDB {
     db(this._options);
     this._db = db;
     this._maxHeight = this.CalcMaxHeight();
+
+    process.on('exit', () => db().close());     // close database on exit
   }
 
   // --------------------------------------------------------------
