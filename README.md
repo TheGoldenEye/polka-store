@@ -185,8 +185,8 @@ Available example databases:
 
 |  Database   | Last Block |     Date     |   Download   |
 |:------------|:-----------|:-------------|:-------------|
-| Polkadot.db | 1619674    | Sep 16, 2020 | [Polkadot.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)  |
-| Kusama.db   | 4072231    | Sep 16, 2020 | [Kusama.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)    |
+| Polkadot.db | 1687349    | Sep 21, 2020 | [Polkadot.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)  |
+| Kusama.db   | 4140035    | Sep 21, 2020 | [Kusama.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)    |
 | Westend.db  | 2247538    | Sep 16, 2020 | [Westend.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)   |
 
 ## 4 Running

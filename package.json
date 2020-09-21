@@ -1,6 +1,6 @@
 {
   "name": "polka-store",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Store balance-relevant transactions from a Polkadot chain in a database",
   "main": "main.js",
   "scripts": {
