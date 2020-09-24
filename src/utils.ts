@@ -228,6 +228,7 @@ async function ProcessEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev
 
   await Promise.all([
     ProcessTransferEvents(data, ex, exIdx, ev, evIdx),
+    ProcesDustLostEvents(data, ex, exIdx, ev, evIdx),
     ProcessStakingRewardEvents(data, ex, exIdx, ev, evIdx),
     ProcessReserveRepatriatedEvents(data, ex, exIdx, ev, evIdx)
   ]);
@@ -253,6 +254,38 @@ async function ProcessTransferEvents(data: TBlockData, ex: IExtrinsic, exIdx: nu
       senderId: ev.data[0].toString(),
       recipientId: ev.data[1].toString(),
       amount: BigInt(ev.data[2]),
+      //      totalFee: undefined,
+      partialFee: undefined,
+      feeBalances: undefined,
+      feeTreasury: undefined,
+      tip: undefined,
+      success: undefined
+    };
+
+    data.txs.push(tx);
+  }
+}
+
+// --------------------------------------------------------------
+// process transfer events
+async function ProcesDustLostEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number): Promise<void> {
+  if (ev.method == 'balances.DustLost') {
+
+    const tx: TTransaction = {
+      chain: data.db.chain,
+      id: data.block.number + '-' + exIdx + '_ev' + evIdx,
+      height: data.block.number.toNumber(),
+      blockHash: data.block.hash.toString(),
+      type: ex.method,
+      subType: undefined,
+      event: ev.method,
+      timestamp: GetTime(data.block.extrinsics),
+      specVersion: undefined,
+      transactionVersion: undefined,
+      authorId: undefined,
+      senderId: ev.data[0].toString(),
+      recipientId: undefined,
+      amount: BigInt(ev.data[1]),
       //      totalFee: undefined,
       partialFee: undefined,
       feeBalances: undefined,
