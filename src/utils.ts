@@ -8,13 +8,14 @@ import * as getPackageVersion from '@jsbits/get-package-version'
 
 type TBlockData = {
   api: ApiPromise,
+  handler: ApiHandler,
+  blockNr: number,
+  blockHash: BlockHash,
   block: IBlock,
   db: CTxDB,
   txs: TTransaction[],
   chain: string,
 };
-
-let currentBlockNr = -1;
 
 // --------------------------------------------------------------
 // initialize polkadot API
@@ -43,15 +44,6 @@ export async function InitAPI(providers: string[], expectedChain: string): Promi
   if (!api)
     throw ('Cannot find suitable provider to connect');
 
-  api.on('error', (err) => {
-    if (err.message) {
-      if (currentBlockNr < 0)
-        console.error(err.message)
-      else
-        console.error('BlockNr:', currentBlockNr, err.message)
-    }
-  });
-
   // Retrieve the chain & node information information via rpc calls
   const [chain, nodeName, nodeVersion] = await Promise.all([
     api.rpc.system.chain(),
@@ -75,21 +67,33 @@ export async function InitAPI(providers: string[], expectedChain: string): Promi
 
 // --------------------------------------------------------------
 export async function ProcessBlockData(api: ApiPromise, handler: ApiHandler, db: CTxDB, blockNr: number, chain: string): Promise<void> {
-  currentBlockNr = blockNr;
-  const hash = await api.rpc.chain.getBlockHash(blockNr);
-  return ProcessBlockDataH(api, handler, db, hash, chain);
-}
-
-// --------------------------------------------------------------
-export async function ProcessBlockDataH(api: ApiPromise, handler: ApiHandler, db: CTxDB, hash: BlockHash, chain: string): Promise<void> {
-  const block = await handler.fetchBlock(hash);
-
   const data: TBlockData = {
     api: api,
-    block: block,
+    handler: handler,
+    block: <IBlock><unknown>0,
+    blockHash: <BlockHash><unknown>0,
+    blockNr: blockNr,
     txs: [],
     db: db,
     chain: chain
+  }
+
+  try {
+    data.blockHash = await api.rpc.chain.getBlockHash(blockNr);
+  }
+  catch (e) {
+    console.error('BlockNr:', blockNr, 'ProcessBlockData(): Error:', (e as Error).message)
+  }
+  return ProcessBlockDataH(data);
+}
+
+// --------------------------------------------------------------
+export async function ProcessBlockDataH(data: TBlockData): Promise<void> {
+  try {
+    data.block = await data.handler.fetchBlock(data.blockHash);
+  }
+  catch (e) {
+    console.error('BlockNr:', data.blockNr, 'ProcessBlockDataH(): Error:', (e as Error).message)
   }
 
   return ProcessBlockDataB(data);
@@ -98,12 +102,17 @@ export async function ProcessBlockDataH(api: ApiPromise, handler: ApiHandler, db
 // --------------------------------------------------------------
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export async function ProcessBlockDataB(data: TBlockData): Promise<void> {
-  await Promise.all([
-    ProcessStakingSlashEvents(data, data.block.onInitialize),   // 1. process events attached directly to block
-    ProcessExtrinsics(data)                                     // 2. process extrinsics
-  ])
+  try {
+    await Promise.all([
+      ProcessStakingSlashEvents(data, data.block.onInitialize),   // 1. process events attached directly to block
+      ProcessExtrinsics(data)                                     // 2. process extrinsics
+    ])
 
-  data.db.InsertTransactions(data.txs);
+    data.db.InsertTransactions(data.txs);
+  }
+  catch (e) {
+    console.error('BlockNr:', data.blockNr, 'ProcessBlockDataB(): Error:', (e as Error).message)
+  }
 }
 
 // --------------------------------------------------------------
@@ -232,7 +241,6 @@ function ProcessGeneral(data: TBlockData, ex: IExtrinsic, idxEx: number, ver: Ru
 // process all event
 async function ProcessEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number, specVer: number): Promise<void> {
   //console.log(data.block.number + '-' + exIdx + '_ev' + evIdx, ev.method);
-
   await Promise.all([
     ProcessTransferEvents(data, ex, exIdx, ev, evIdx),
     ProcesDustLostEvents(data, ex, exIdx, ev, evIdx),
@@ -240,6 +248,7 @@ async function ProcessEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev
     ProcessReserveRepatriatedEvents(data, ex, exIdx, ev, evIdx),
     ProcessMissingEvents(data, ex, exIdx, ev, evIdx, specVer)
   ]);
+
 }
 
 // --------------------------------------------------------------
@@ -398,10 +407,7 @@ async function ProcessMissingEvents(data: TBlockData, ex: IExtrinsic, exIdx: num
 
     const regIdx = ev.data[1];
     const registrars = await data.api.query.identity.registrars.at(data.block.hash);
-    const regO = registrars[regIdx.toString()];
-    if (regO.isNone)
-      return;
-    const reg = regO.unwrap();
+    const registrar = registrars[regIdx.toString()].unwrap();
 
     const tx: TTransaction = {
       chain: data.db.chain,
@@ -416,8 +422,8 @@ async function ProcessMissingEvents(data: TBlockData, ex: IExtrinsic, exIdx: num
       transactionVersion: undefined,
       authorId: undefined,
       senderId: ev.data[0].toString(),
-      recipientId: reg.account.toString(),
-      amount: BigInt(reg.fee),
+      recipientId: registrar.account.toString(),
+      amount: BigInt(registrar.fee),
       //      totalFee: undefined,
       partialFee: undefined,
       feeBalances: undefined,
