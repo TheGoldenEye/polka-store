@@ -36,7 +36,7 @@ async function main() {
   // scan the chain and write block data to database
   const start = Math.max(maxBlock, chainData.startBlock)
   for (let i = start; i <= LogBlock.LastBlock(); i++) {
-    await ProcessBlockData(api, handler, db, i);
+    await ProcessBlockData(api, handler, db, i, chain);
     LogBlock.LogBlock(i, i == LogBlock.LastBlock());
   }
 }

@@ -1,6 +1,6 @@
 // Required imports
 import { ApiPromise, WsProvider } from '@polkadot/api';
-import { BlockHash, RuntimeDispatchInfo, RuntimeVersion } from '@polkadot/types/interfaces'
+import { BlockHash, RuntimeDispatchInfo, RuntimeVersion, RegistrarInfo } from '@polkadot/types/interfaces'
 import { IBlock, IExtrinsic, ISanitizedEvent, IOnInitializeOrFinalize } from './types';
 import ApiHandler from './ApiHandler';
 import CTxDB, { TTransaction } from './db';
@@ -11,6 +11,7 @@ type TBlockData = {
   block: IBlock,
   db: CTxDB,
   txs: TTransaction[],
+  chain: string,
 };
 
 let currentBlockNr = -1;
@@ -73,34 +74,36 @@ export async function InitAPI(providers: string[], expectedChain: string): Promi
 }
 
 // --------------------------------------------------------------
-export async function ProcessBlockData(api: ApiPromise, handler: ApiHandler, db: CTxDB, blockNr: number): Promise<void> {
+export async function ProcessBlockData(api: ApiPromise, handler: ApiHandler, db: CTxDB, blockNr: number, chain: string): Promise<void> {
   currentBlockNr = blockNr;
   const hash = await api.rpc.chain.getBlockHash(blockNr);
-  return ProcessBlockDataH(api, handler, db, hash);
+  return ProcessBlockDataH(api, handler, db, hash, chain);
 }
 
 // --------------------------------------------------------------
-export async function ProcessBlockDataH(api: ApiPromise, handler: ApiHandler, db: CTxDB, hash: BlockHash): Promise<void> {
+export async function ProcessBlockDataH(api: ApiPromise, handler: ApiHandler, db: CTxDB, hash: BlockHash, chain: string): Promise<void> {
   const block = await handler.fetchBlock(hash);
-  return ProcessBlockDataB(api, handler, db, block);
-}
 
-// --------------------------------------------------------------
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export async function ProcessBlockDataB(api: ApiPromise, handler: ApiHandler, db: CTxDB, block: IBlock): Promise<void> {
   const data: TBlockData = {
     api: api,
     block: block,
     txs: [],
     db: db,
+    chain: chain
   }
 
+  return ProcessBlockDataB(data);
+}
+
+// --------------------------------------------------------------
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export async function ProcessBlockDataB(data: TBlockData): Promise<void> {
   await Promise.all([
-    ProcessStakingSlashEvents(data, block.onInitialize),    // 1. process events attached directly to block
-    ProcessExtrinsics(data)                                 // 2. process extrinsics
+    ProcessStakingSlashEvents(data, data.block.onInitialize),   // 1. process events attached directly to block
+    ProcessExtrinsics(data)                                     // 2. process extrinsics
   ])
 
-  db.InsertTransactions(data.txs);
+  data.db.InsertTransactions(data.txs);
 }
 
 // --------------------------------------------------------------
@@ -141,7 +144,11 @@ async function ProcessStakingSlashEvents(data: TBlockData, onIF: IOnInitializeOr
 // process general extrinsics
 async function ProcessExtrinsics(data: TBlockData): Promise<void> {
 
-  const methodsToScan = ['utility.batch', 'proxy.proxy', 'multisig.asMulti', 'staking.payoutStakers', 'balances.transfer', 'balances.transferKeepAlive']
+  const methodsToScan = [
+    'utility.batch', 'proxy.proxy', 'multisig.asMulti',
+    'staking.payoutStakers', 'balances.transfer', 'balances.transferKeepAlive',
+    'identity.requestJudgement'   // for ProcessMissingEvents
+  ]
 
   const ver = await data.api.rpc.state.getRuntimeVersion(data.block.parentHash);  // get runtime version of the block
 
@@ -156,13 +163,13 @@ async function ProcessExtrinsics(data: TBlockData): Promise<void> {
     /*
         if (methodsToScan.includes(method))
           await Promise.all(ex.events.map(async (ev: ISanitizedEvent, evIdx: number) => {
-            await ProcessEvents(data, ex, exIdx, ev, evIdx);
+            await ProcessEvents(data, ex, exIdx, ev, evIdx, ver.specVersion.toNumber());
           }));
     */
     // sequential:
     if (methodsToScan.includes(method))
       for (let i = 0, n = ex.events.length; i < n; i++)
-        await ProcessEvents(data, ex, exIdx, ex.events[i], i);
+        await ProcessEvents(data, ex, exIdx, ex.events[i], i, ver.specVersion.toNumber());
   }
 
 
@@ -223,14 +230,15 @@ function ProcessGeneral(data: TBlockData, ex: IExtrinsic, idxEx: number, ver: Ru
 
 // --------------------------------------------------------------
 // process all event
-async function ProcessEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number): Promise<void> {
+async function ProcessEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number, specVer: number): Promise<void> {
   //console.log(data.block.number + '-' + exIdx + '_ev' + evIdx, ev.method);
 
   await Promise.all([
     ProcessTransferEvents(data, ex, exIdx, ev, evIdx),
     ProcesDustLostEvents(data, ex, exIdx, ev, evIdx),
     ProcessStakingRewardEvents(data, ex, exIdx, ev, evIdx),
-    ProcessReserveRepatriatedEvents(data, ex, exIdx, ev, evIdx)
+    ProcessReserveRepatriatedEvents(data, ex, exIdx, ev, evIdx),
+    ProcessMissingEvents(data, ex, exIdx, ev, evIdx, specVer)
   ]);
 }
 
@@ -360,6 +368,56 @@ async function ProcessReserveRepatriatedEvents(data: TBlockData, ex: IExtrinsic,
       senderId: ev.data[0].toString(),
       recipientId: ev.data[1].toString(),
       amount: BigInt(ev.data[2]),
+      //      totalFee: undefined,
+      partialFee: undefined,
+      feeBalances: undefined,
+      feeTreasury: undefined,
+      tip: undefined,
+      success: undefined
+    };
+
+    data.txs.push(tx);
+  }
+}
+
+// --------------------------------------------------------------
+// process missing events in older runtimes
+async function ProcessMissingEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number, specVer: number): Promise<void> {
+
+  // balances.Reserved/balances.Unreserved/balances.ReserveRepatriated are new from kusama v2008 / polkadot v8
+  // for older runtimes we try to emulate the transfer
+  const verReserve = {
+    'Kusama': 2008,
+    'Polkadot': 8
+  }
+  const checkResVer = verReserve[data.chain];
+  if (!checkResVer || checkResVer <= specVer)  // higher specVersion, nothing to do
+    return;
+
+  if (ev.method == 'identity.JudgementRequested') {   // a trigger event for emulated balances.ReserveRepatriated
+
+    const regIdx = ev.data[1];
+    const registrars = await data.api.query.identity.registrars.at(data.block.hash);
+    const regO = registrars[regIdx.toString()];
+    if (regO.isNone)
+      return;
+    const reg = regO.unwrap();
+
+    const tx: TTransaction = {
+      chain: data.db.chain,
+      id: data.block.number + '-' + exIdx + '_ev' + evIdx + '_1',
+      height: data.block.number.toNumber(),
+      blockHash: data.block.hash.toString(),
+      type: ex.method,
+      subType: undefined,
+      event: 'balances.ReserveRepatriated_e',   // emulated
+      timestamp: GetTime(data.block.extrinsics),
+      specVersion: undefined,
+      transactionVersion: undefined,
+      authorId: undefined,
+      senderId: ev.data[0].toString(),
+      recipientId: reg.account.toString(),
+      amount: BigInt(reg.fee),
       //      totalFee: undefined,
       partialFee: undefined,
       feeBalances: undefined,
