@@ -407,6 +407,8 @@ async function ProcessMissingEvents(data: TBlockData, ex: IExtrinsic, exIdx: num
 
     const regIdx = ev.data[1];
     const registrars = await data.api.query.identity.registrars.at(data.block.hash);
+    if (!registrars.length)
+      return;
     const registrar = registrars[regIdx.toString()].unwrap();
 
     const tx: TTransaction = {
