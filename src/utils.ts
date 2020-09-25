@@ -397,7 +397,7 @@ async function ProcessMissingEvents(data: TBlockData, ex: IExtrinsic, exIdx: num
   // for older runtimes we try to emulate the transfer
   const verReserve = {
     'Kusama': 2008,
-    'Polkadot': 8
+    'Polkadot': 13
   }
   const checkResVer = verReserve[data.chain];
   if (!checkResVer || checkResVer <= specVer)  // higher specVersion, nothing to do
