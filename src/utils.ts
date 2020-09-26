@@ -1,6 +1,6 @@
 // Required imports
 import { ApiPromise, WsProvider } from '@polkadot/api';
-import { BlockHash, RuntimeDispatchInfo, RuntimeVersion, RegistrarInfo } from '@polkadot/types/interfaces'
+import { BlockHash, RuntimeDispatchInfo, RuntimeVersion } from '@polkadot/types/interfaces'
 import { IBlock, IExtrinsic, ISanitizedEvent, IOnInitializeOrFinalize } from './types';
 import ApiHandler from './ApiHandler';
 import CTxDB, { TTransaction } from './db';
