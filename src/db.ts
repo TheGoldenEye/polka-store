@@ -33,6 +33,7 @@ export default class CTxDB {
     this._chain = chain;
 
     db(this._options);
+    db().defaultSafeIntegers(true);
     this._db = db;
     this._maxHeight = this.CalcMaxHeight();
 
