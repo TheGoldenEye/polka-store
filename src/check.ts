@@ -1,6 +1,6 @@
 // Required imports
 import ApiHandler from './ApiHandler';
-import { InitAPI } from './utils';
+import { InitAPI, Divide } from './utils';
 import * as config from './config.json';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -40,21 +40,21 @@ async function main() {
   if (!chainData.check_accounts.length)
     console.log('  no accounts given');
 
+  const lastBlock: bigint = db().queryFirstRow('SELECT max(height) AS val FROM transactions').val;
 
   // iterate over all test accounts
   for (let i = 0, n = chainData.check_accounts.length; i < n; i++) {
     const accountID = chainData.check_accounts[i];
-    const lastBlock = db().queryFirstRow('SELECT max(height) AS val FROM transactions').val;
-    const feesReceived = db().queryFirstRow('SELECT sum(feeBalances) AS val FROM transactions WHERE authorId=?', accountID).val;
+    const feesReceived: bigint = db().queryFirstRow('SELECT sum(feeBalances) AS val FROM transactions WHERE authorId=?', accountID).val;
     // feesPaid1 calculated from feeBalances and feeTreasury
-    const feesPaid1 = db().queryFirstRow('SELECT COALESCE(sum(feeBalances), 0)+COALESCE(sum(feeTreasury), 0) AS val FROM transactions WHERE senderId=?', accountID).val;
+    const feesPaid1: bigint = db().queryFirstRow('SELECT COALESCE(sum(feeBalances), 0)+COALESCE(sum(feeTreasury), 0) AS val FROM transactions WHERE senderId=?', accountID).val;
     // feesPaid2 calculated from partialFee
-    const feesPaid2 = db().queryFirstRow('SELECT COALESCE(sum(partialFee), 0)+COALESCE(sum(tip), 0) AS val FROM transactions WHERE senderId=?', accountID).val;
-    const paid = db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE senderId=?', accountID).val;
-    const received = db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE recipientId=?', accountID).val;
+    const feesPaid2: bigint = db().queryFirstRow('SELECT COALESCE(sum(partialFee), 0)+COALESCE(sum(tip), 0) AS val FROM transactions WHERE senderId=?', accountID).val;
+    const paid: bigint = db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE senderId=?', accountID).val;
+    const received: bigint = db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE recipientId=?', accountID).val;
     const total1 = feesReceived + received - feesPaid1 - paid;
     const total2 = feesReceived + received - feesPaid2 - paid;
-    const plancks: number = chainData.PlanckPerUnit;
+    const plancks: bigint = chainData.PlanckPerUnit;
 
     const hash = await api.rpc.chain.getBlockHash(lastBlock);
     const balance = await handler.fetchBalance(hash, accountID);
@@ -68,7 +68,7 @@ async function main() {
     console.log('received:    ', received / plancks);
     console.log('Balance at Block %d: %d', lastBlock, total1 / plancks, '(calculated from feeBalances and feeTreasury)');
     console.log('Balance at Block %d: %d', lastBlock, total2 / plancks, '(calculated from partialFee)');
-    console.log('Balance at Block %d: %d', lastBlock, (balance.reserved.toNumber() + balance.free.toNumber()) / plancks, '(from API)');
+    console.log('Balance at Block %d: %d', lastBlock, Divide(BigInt(balance.reserved) + BigInt(balance.free), plancks), '(from API)');
   }
 
 }
