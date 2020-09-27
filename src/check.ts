@@ -29,6 +29,7 @@ async function main() {
     migrate: false,
   }
   db(options);
+  db().defaultSafeIntegers(true);
 
   process.on('exit', () => db().close());     // close database on exit
 
@@ -44,7 +45,7 @@ async function main() {
     return;
   }
 
-  const lastBlock: bigint = db().queryFirstRow('SELECT max(height) AS val FROM transactions').val;
+  const lastBlock = Number(db().queryFirstRow('SELECT max(height) AS val FROM transactions').val);
   const date = db().queryFirstRow('SELECT datetime(timestamp/1000, \'unixepoch\', \'localtime\') as val FROM transactions WHERE height=?', lastBlock).val;
   console.log('Balance data at Block: %d (%s)', lastBlock, date);
 
@@ -55,14 +56,14 @@ async function main() {
     const plancks = BigInt(chainData.planckPerUnit);
 
     // balance calculation
-    const feesReceived = BigInt(db().queryFirstRow('SELECT sum(feeBalances) AS val FROM transactions WHERE authorId=?', accountID).val || 0);
+    const feesReceived: bigint = db().queryFirstRow('SELECT sum(feeBalances) AS val FROM transactions WHERE authorId=?', accountID).val || BigInt(0);
     // feesPaid calculated from feeBalances and feeTreasury:
-    const feesPaid = BigInt(db().queryFirstRow('SELECT COALESCE(sum(feeBalances), 0)+COALESCE(sum(feeTreasury), 0) AS val FROM transactions WHERE senderId=?', accountID).val || 0);
+    const feesPaid: bigint = db().queryFirstRow('SELECT COALESCE(sum(feeBalances), 0)+COALESCE(sum(feeTreasury), 0) AS val FROM transactions WHERE senderId=?', accountID).val || BigInt(0);
     // feesPaid calculated from partialFee:
-    // const feesPaid = BigInt(db().queryFirstRow('SELECT COALESCE(sum(partialFee), 0)+COALESCE(sum(tip), 0) AS val FROM transactions WHERE senderId=?', accountID).val || 0);
-    const paid = BigInt(db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE senderId=?', accountID).val || 0);
-    const received = BigInt(db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE recipientId=?', accountID).val || 0);
-    const total = feesReceived + received - feesPaid - paid;
+    // const feesPaid : bigint = db().queryFirstRow('SELECT COALESCE(sum(partialFee), 0)+COALESCE(sum(tip), 0) AS val FROM transactions WHERE senderId=?', accountID).val || BigInt(0);
+    const paid: bigint = db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE senderId=?', accountID).val || BigInt(0);
+    const received: bigint = db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE recipientId=?', accountID).val || BigInt(0);
+    const total: bigint = feesReceived + received - feesPaid - paid;
     const totalD = Divide(total, plancks);
 
     // balance from API
