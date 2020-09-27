@@ -137,9 +137,12 @@ Besides the `check_accounts` option there is currently no need to change the def
         "wss://cc1-1.polkadot.network"
       ],
       "startBlock": 892,
-      "unit" : "DOT",
-      "planckPerUnit" : 1e10,
-      "check_accounts": []
+      "unit": "DOT",
+      "planckPerUnit": 10000000000,
+      "check_accounts": [
+        { "name": "Example1", "account": "15kUt2i86LHRWCkE3D9Bg1HZAoc2smhn1fwPzDERTb1BXAkX" },
+        { "name": "Example2", "account": "12xtAYsRUrmbniiWQqJtECiBQrMn8AypQcXhnQAc6RB6XkLW" }
+      ]
     },
     "Kusama": {
       "providers": [
@@ -152,9 +155,12 @@ Besides the `check_accounts` option there is currently no need to change the def
         "wss://cc3-5.kusama.network"
       ],
       "startBlock": 3876,
-      "unit" : "KSM",
-      "planckPerUnit" : 1e12,
-      "check_accounts": []
+      "unit": "KSM",
+      "planckPerUnit": 1000000000000,
+      "check_accounts": [
+        { "name": "Example1", "account": "HmFYPT1btmi1T9qqs5WtuNJK93yNdnjjhReZh6emgNQvCHa" },
+        { "name": "Example2", "account": "GXPPBuUaZYYYvsEquX55AQ1MRvgZ96kniEKyAVDSdv1SX96" }
+      ]
     },
     "Westend": {
       "providers": [
@@ -162,9 +168,12 @@ Besides the `check_accounts` option there is currently no need to change the def
         "wss://westend-rpc.polkadot.io"
       ],
       "startBlock": 1191,
-      "unit" : "WND",
-      "planckPerUnit" : 1e12,
-      "check_accounts": []
+      "unit": "WND",
+      "planckPerUnit": 1000000000000,
+      "check_accounts": [
+        { "name": "Example1", "account": "5FnD6fKjTFLDKwBvrieQ6ZthZbgMjppynLhKqiRUft9yr8Nf" },
+        { "name": "Example2", "account": "5DfdW2r2hyXzGdXFqAVJKGrtxV2UaacnVNr3sAdgCUDc9N9g" }
+      ]
     }
   }
 }
