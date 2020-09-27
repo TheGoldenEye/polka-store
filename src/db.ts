@@ -63,7 +63,7 @@ export default class CTxDB {
   // returns maximum blockheight in database (before program execution)
   CalcMaxHeight(): number {
     const row = db().queryFirstRow('SELECT max(height) as max FROM transactions WHERE chain=?', this._chain);
-    return row.max ? row.max : -1;
+    return row.max ? Number(row.max) : -1;
   }
 
   // --------------------------------------------------------------
