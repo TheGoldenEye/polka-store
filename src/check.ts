@@ -30,6 +30,8 @@ async function main() {
   }
   db(options);
 
+  process.on('exit', () => db().close());     // close database on exit
+
   const api = await InitAPI(chainData.providers, chain);
 
   // Create API Handler
@@ -48,33 +50,37 @@ async function main() {
 
   // iterate over all test accounts
   for (let i = 0, n = chainData.check_accounts.length; i < n; i++) {
-    const accountID = chainData.check_accounts[i];
-    const feesReceived: bigint = db().queryFirstRow('SELECT sum(feeBalances) AS val FROM transactions WHERE authorId=?', accountID).val;
-    // feesPaid1 calculated from feeBalances and feeTreasury
-    const feesPaid1: bigint = db().queryFirstRow('SELECT COALESCE(sum(feeBalances), 0)+COALESCE(sum(feeTreasury), 0) AS val FROM transactions WHERE senderId=?', accountID).val;
-    // feesPaid2 calculated from partialFee
-    const feesPaid2: bigint = db().queryFirstRow('SELECT COALESCE(sum(partialFee), 0)+COALESCE(sum(tip), 0) AS val FROM transactions WHERE senderId=?', accountID).val;
-    const paid: bigint = db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE senderId=?', accountID).val;
-    const received: bigint = db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE recipientId=?', accountID).val;
-    const total1 = feesReceived + received - feesPaid1 - paid;
-    const total2 = feesReceived + received - feesPaid2 - paid;
-    const plancks: bigint = chainData.planckPerUnit;
+    const name = chainData.check_accounts[i].name;
+    const accountID = chainData.check_accounts[i].account;
+    const plancks = BigInt(chainData.planckPerUnit);
 
+    // balance calculation
+    const feesReceived = BigInt(db().queryFirstRow('SELECT sum(feeBalances) AS val FROM transactions WHERE authorId=?', accountID).val || 0);
+    // feesPaid calculated from feeBalances and feeTreasury:
+    const feesPaid = BigInt(db().queryFirstRow('SELECT COALESCE(sum(feeBalances), 0)+COALESCE(sum(feeTreasury), 0) AS val FROM transactions WHERE senderId=?', accountID).val || 0);
+    // feesPaid calculated from partialFee:
+    // const feesPaid = BigInt(db().queryFirstRow('SELECT COALESCE(sum(partialFee), 0)+COALESCE(sum(tip), 0) AS val FROM transactions WHERE senderId=?', accountID).val || 0);
+    const paid = BigInt(db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE senderId=?', accountID).val || 0);
+    const received = BigInt(db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE recipientId=?', accountID).val || 0);
+    const total = feesReceived + received - feesPaid - paid;
+    const totalD = Divide(total, plancks);
+
+    // balance from API
     const hash = await api.rpc.chain.getBlockHash(lastBlock);
     const balance = await handler.fetchBalance(hash, accountID);
+    const balanceTotal = BigInt(balance.reserved) + BigInt(balance.free);
+    const balanceTotalD = Divide(balanceTotal, plancks);
 
     console.log('------------------------------------------',);
-    console.log('AccointID:   ', accountID);
-    console.log('feesReceived:', feesReceived / plancks);
-    console.log('feesPaid1:   ', feesPaid1 / plancks, '(calculated from feeBalances and feeTreasury)');
-    console.log('feesPaid2:   ', feesPaid2 / plancks, '(calculated from partialFee)');
-    console.log('paid:        ', paid / plancks);
-    console.log('received:    ', received / plancks);
-    console.log('Balance:     ', total1 / plancks, '(calculated from feeBalances and feeTreasury)');
-    console.log('Balance:     ', total2 / plancks, '(calculated from partialFee)');
-    console.log('Balance:     ', Divide(BigInt(balance.reserved) + BigInt(balance.free), plancks), '(from API)');
+    console.log('Account:     %s (%s)', name, accountID);
+    //console.log('feesReceived:%d %s', feesReceived / plancks, chainData.unit);
+    //console.log('feesPaid:    %d %s', feesPaid / plancks, chainData.unit);
+    //console.log('paid:        %d %s', paid / plancks, chainData.unit);
+    //console.log('received:    %d %s', received / plancks, chainData.unit);
+    console.log('Balance:     %d %s (calculated)', totalD, chainData.unit);
+    console.log('Balance:     %d %s (from API)', balanceTotalD, chainData.unit);
+    console.log('Difference:  %d %s', Divide(balanceTotal - total, plancks), chainData.unit);
   }
-
 }
 
 main().catch(console.error).finally(() => { process.exit() });

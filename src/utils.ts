@@ -524,7 +524,7 @@ export function GetTime(extrinsics: IExtrinsic[]): number {
 export function Divide(a: bigint, b: bigint): number {
   const q = Number(BigInt(a) / BigInt(b));
   const r = Number(BigInt(a) % BigInt(b));
-  return q + r / Number(BigInt(b));
+  return q + r / Number(b);
 }
 
 // --------------------------------------------------------------
