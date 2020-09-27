@@ -9,7 +9,8 @@
         "wss://cc1-1.polkadot.network"
       ],
       "startBlock": 892,
-      "PlanckPerUnit" : 1e10,
+      "unit" : "DOT",
+      "planckPerUnit" : 1e10,
       "check_accounts": []
     },
     "Kusama": {
@@ -23,7 +24,8 @@
         "wss://cc3-5.kusama.network"
       ],
       "startBlock": 3876,
-      "PlanckPerUnit" : 1e12,
+      "unit" : "KSM",
+      "planckPerUnit" : 1e12,
       "check_accounts": []
     },
     "Westend": {
@@ -32,7 +34,8 @@
         "wss://westend-rpc.polkadot.io"
       ],
       "startBlock": 1191,
-      "PlanckPerUnit" : 1e12,
+      "unit" : "WND",
+      "planckPerUnit" : 1e12,
       "check_accounts": []
     }
   }

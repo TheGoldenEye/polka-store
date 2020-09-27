@@ -1,15 +1,15 @@
 // Required imports
 import ApiHandler from './ApiHandler';
-import { InitAPI, Divide } from './utils';
-import * as config from './config.json';
+import { InitAPI, Divide, LoadConfigFile } from './utils';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const db = require('better-sqlite3-helper');
 
-
 // --------------------------------------------------------------
 // --------------------------------------------------------------
 async function main() {
+  const config = LoadConfigFile();
+
   // check given chain
   const chain = process.argv[2] || config.defchain;
   const chainData = config.chains[chain];
@@ -35,12 +35,16 @@ async function main() {
   // Create API Handler
   const handler = new ApiHandler(api);
 
-  console.log('##########################################',);
+  console.log('##########################################');
   console.log('Chain:', chain);
-  if (!chainData.check_accounts.length)
+  if (!chainData.check_accounts.length) {
     console.log('  no accounts given');
+    return;
+  }
 
   const lastBlock: bigint = db().queryFirstRow('SELECT max(height) AS val FROM transactions').val;
+  const date = db().queryFirstRow('SELECT datetime(timestamp/1000, \'unixepoch\', \'localtime\') as val FROM transactions WHERE height=?', lastBlock).val;
+  console.log('Balance data at Block: %d (%s)', lastBlock, date);
 
   // iterate over all test accounts
   for (let i = 0, n = chainData.check_accounts.length; i < n; i++) {
@@ -54,7 +58,7 @@ async function main() {
     const received: bigint = db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE recipientId=?', accountID).val;
     const total1 = feesReceived + received - feesPaid1 - paid;
     const total2 = feesReceived + received - feesPaid2 - paid;
-    const plancks: bigint = chainData.PlanckPerUnit;
+    const plancks: bigint = chainData.planckPerUnit;
 
     const hash = await api.rpc.chain.getBlockHash(lastBlock);
     const balance = await handler.fetchBalance(hash, accountID);
@@ -66,9 +70,9 @@ async function main() {
     console.log('feesPaid2:   ', feesPaid2 / plancks, '(calculated from partialFee)');
     console.log('paid:        ', paid / plancks);
     console.log('received:    ', received / plancks);
-    console.log('Balance at Block %d: %d', lastBlock, total1 / plancks, '(calculated from feeBalances and feeTreasury)');
-    console.log('Balance at Block %d: %d', lastBlock, total2 / plancks, '(calculated from partialFee)');
-    console.log('Balance at Block %d: %d', lastBlock, Divide(BigInt(balance.reserved) + BigInt(balance.free), plancks), '(from API)');
+    console.log('Balance:     ', total1 / plancks, '(calculated from feeBalances and feeTreasury)');
+    console.log('Balance:     ', total2 / plancks, '(calculated from partialFee)');
+    console.log('Balance:     ', Divide(BigInt(balance.reserved) + BigInt(balance.free), plancks), '(from API)');
   }
 
 }

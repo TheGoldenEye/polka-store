@@ -1,14 +1,15 @@
 // Required imports
 import ApiHandler from './ApiHandler';
 import CTxDB from './db';
-import CLogBlockNr, { InitAPI, ProcessBlockData } from './utils';
-import * as config from './config.json';
+import CLogBlockNr, { InitAPI, ProcessBlockData, LoadConfigFile } from './utils';
 
 // --------------------------------------------------------------
 // --------------------------------------------------------------
 async function main() {
 
   process.on('SIGINT', () => process.exit()); // Ctrl+C pressed
+
+  const config = LoadConfigFile();
 
   const chain = process.argv[2] || config.defchain;
   const chainData = config.chains[chain];

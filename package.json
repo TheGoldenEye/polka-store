@@ -24,7 +24,9 @@
     "@polkadot/api": "^1.33.1",
     "@polkadot/calc-fee": "file:./calc-fee/pkg",
     "@types/better-sqlite3": "^5.4.0",
-    "better-sqlite3-helper": "^3.1.0"
+    "better-sqlite3-helper": "^3.1.0",
+    "bn": "^1.0.5",
+    "fs": "^0.0.1-security"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^3.5.0",

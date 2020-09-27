@@ -114,11 +114,16 @@ yarn
 
 ## 3 Configuration
 
-### 3.1 config.json
+### 3.1 config/config.json
 
-Please find the configuration in src/config.json.
-Here are some parameters defined for the different chains.  
-There is currently no need to change the default configuration:
+Please find a template for configuration in `config/config_tpl.json`.
+Instead, the file used by the tool is `config/config.json`.
+If the file does not exist, `config/config_tpl.json` is copied to
+`config/config.json` during the program start phase.  
+You can adapt this file to your needs.
+
+Here are the parameters defined for the different chains.  
+Besides the `check_accounts` option there is currently no need to change the default configuration:
 
 ``` bash
 {
@@ -132,7 +137,8 @@ There is currently no need to change the default configuration:
         "wss://cc1-1.polkadot.network"
       ],
       "startBlock": 892,
-      "PlanckPerUnit" : 1e10,
+      "unit" : "DOT",
+      "planckPerUnit" : 1e10,
       "check_accounts": []
     },
     "Kusama": {
@@ -146,7 +152,8 @@ There is currently no need to change the default configuration:
         "wss://cc3-5.kusama.network"
       ],
       "startBlock": 3876,
-      "PlanckPerUnit" : 1e12,
+      "unit" : "KSM",
+      "planckPerUnit" : 1e12,
       "check_accounts": []
     },
     "Westend": {
@@ -155,7 +162,8 @@ There is currently no need to change the default configuration:
         "wss://westend-rpc.polkadot.io"
       ],
       "startBlock": 1191,
-      "PlanckPerUnit" : 1e12,
+      "unit" : "WND",
+      "planckPerUnit" : 1e12,
       "check_accounts": []
     }
   }

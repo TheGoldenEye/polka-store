@@ -5,6 +5,7 @@ import { IBlock, IExtrinsic, ISanitizedEvent, IOnInitializeOrFinalize } from './
 import ApiHandler from './ApiHandler';
 import CTxDB, { TTransaction } from './db';
 import * as getPackageVersion from '@jsbits/get-package-version'
+import * as fs from 'fs';
 
 type TBlockData = {
   api: ApiPromise,
@@ -526,4 +527,17 @@ export function Divide(a: bigint, b: bigint): number {
   return q + r / Number(BigInt(b));
 }
 
+// --------------------------------------------------------------
+// loads config.json and return config object
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function LoadConfigFile(): any {
+  const configFile = './config/config.json';
+  const configFile_tpl = './config/config_tpl.json'
+
+  // first copy config from temlate, if not there
+  if (!fs.existsSync(configFile))
+    fs.copyFileSync(configFile_tpl, configFile);
+
+  return JSON.parse(fs.readFileSync(configFile, 'utf8'));
+}
 
