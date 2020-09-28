@@ -23,7 +23,7 @@ async function main() {
   // open database
   const options = {
     path: config.filename || 'data/' + chain + '.db',
-    readonly: true, // read only
+    readonly: false,
     fileMustExist: true, // throw error if database not exists
     WAL: false, // automatically enable 'PRAGMA journal_mode = WAL'?
     migrate: false,
