@@ -6,6 +6,7 @@ import ApiHandler from './ApiHandler';
 import CTxDB, { TTransaction } from './db';
 import * as getPackageVersion from '@jsbits/get-package-version'
 import * as fs from 'fs';
+import * as Ajv from 'ajv';
 
 type TBlockData = {
   api: ApiPromise,
@@ -528,6 +529,19 @@ export function Divide(a: bigint, b: bigint): number {
 }
 
 // --------------------------------------------------------------
+// validates configFile according to the schema file
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function ValidateConfigFile(config: any, schemaFile: string): any {
+  const ajv = new Ajv({ allErrors: true });
+  const schema = JSON.parse(fs.readFileSync(schemaFile, 'utf8'));
+  const validate = ajv.compile(schema);
+
+  if (!validate(config))
+    throw Error('Invalid structure of config.json: ' + ajv.errorsText(validate.errors));
+  return config;
+}
+
+// --------------------------------------------------------------
 // loads config.json and return config object
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function LoadConfigFile(): any {
@@ -538,6 +552,7 @@ export function LoadConfigFile(): any {
   if (!fs.existsSync(configFile))
     fs.copyFileSync(configFile_tpl, configFile);
 
-  return JSON.parse(fs.readFileSync(configFile, 'utf8'));
+  const config = JSON.parse(fs.readFileSync(configFile, 'utf8'));
+  return ValidateConfigFile(config, './schema/config.schema.json');
 }
 

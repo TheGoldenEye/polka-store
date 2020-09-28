@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "polka-store config file schema",
+  "definitions": {
+    "NamedAccount": {
+      "type": "object",
+      "required": [ "name", "account" ],
+      "properties": {
+        "name": { "type": "string" },
+        "account": { "type": "string" }
+      }
+    },
+    "ChainData": {
+      "type": "object",
+      "description": "Chain specific data",
+      "required": [
+        "providers",
+        "startBlock",
+        "unit",
+        "planckPerUnit",
+        "check_accounts"
+      ],
+      "properties": {
+        "providers": {
+          "description": "An array of websocket urls describing the nodes to connect. The program tries to connect the first node in list, if connection fails, the next one is used.",
+          "type": "array",
+          "minLength": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "startBlock": {
+          "description": "The first block in the chain to be scanned. The default values refer to the blocks with the first transactions on chain.",
+          "type": "number",
+          "minimum": 1
+        },
+        "unit": {
+          "description": "The coin unit.",
+          "type": "string",
+          "enum": [ "DOT", "KSM", "WND" ]
+        },
+        "planckPerUnit": {
+          "description": "The count of plancks per coin unit.",
+          "minItems": 1
+        },
+        "check_accounts": {
+          "type": "array",
+          "description": "A named account.",
+          "items": {
+            "$ref": "#/definitions/NamedAccount"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "filename",
+    "defchain",
+    "chains"
+  ],
+  "properties": {
+    "filename": {
+      "type": "string",
+      "default": "",
+      "description": "The path to the sqlite3 database, the (empty) default means, the filename is set automatically to 'data/<chainname>.db'"
+    },
+    "defchain": {
+      "type": "string",
+      "default": "Polkadot",
+      "description": "The chain which is used (if no chain is given in the command line)."
+    },
+    "chains": {
+      "type": "object",
+      "description": "The defined chains",
+      "required": [ "Polkadot", "Kusama", "Westend" ],
+      "properties": {
+        "Polkadot": {
+          "$ref": "#/definitions/ChainData"
+        },
+        "Kusama": {
+          "$ref": "#/definitions/ChainData"
+        },
+        "Westend": {
+          "$ref": "#/definitions/ChainData"
+        }
+      }
+    }
+  }
+}
