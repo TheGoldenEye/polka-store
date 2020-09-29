@@ -86,7 +86,7 @@ export async function ProcessBlockData(api: ApiPromise, handler: ApiHandler, db:
   catch (e) {
     console.error('BlockNr:', blockNr, 'ProcessBlockData(): Error:', (e as Error).message)
   }
-  return ProcessBlockDataH(data);
+  return await ProcessBlockDataH(data);
 }
 
 // --------------------------------------------------------------
@@ -98,7 +98,7 @@ export async function ProcessBlockDataH(data: TBlockData): Promise<void> {
     console.error('BlockNr:', data.blockNr, 'ProcessBlockDataH(): Error:', (e as Error).message)
   }
 
-  return ProcessBlockDataB(data);
+  return await ProcessBlockDataB(data);
 }
 
 // --------------------------------------------------------------
@@ -168,7 +168,7 @@ async function ProcessExtrinsics(data: TBlockData): Promise<void> {
     const method = ex.method;
 
     // 1. process all signed transactions (stores the fee / tip)
-    ProcessGeneral(data, ex, exIdx, ver);
+    await ProcessGeneral(data, ex, exIdx, ver);
 
     // 2. process events attached to extrinsics
     /*
@@ -188,7 +188,7 @@ async function ProcessExtrinsics(data: TBlockData): Promise<void> {
 
 // --------------------------------------------------------------
 // process general extrinsics
-function ProcessGeneral(data: TBlockData, ex: IExtrinsic, idxEx: number, ver: RuntimeVersion): void {
+async function ProcessGeneral(data: TBlockData, ex: IExtrinsic, idxEx: number, ver: RuntimeVersion): Promise<void> {
 
   if (ex.signature) { // there is a signer
     const pf = (<RuntimeDispatchInfo>ex.info).partialFee;
@@ -242,7 +242,6 @@ function ProcessGeneral(data: TBlockData, ex: IExtrinsic, idxEx: number, ver: Ru
 // --------------------------------------------------------------
 // process all event
 async function ProcessEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number, specVer: number): Promise<void> {
-  //console.log(data.block.number + '-' + exIdx + '_ev' + evIdx, ev.method);
   await Promise.all([
     ProcessTransferEvents(data, ex, exIdx, ev, evIdx),
     ProcesDustLostEvents(data, ex, exIdx, ev, evIdx),
