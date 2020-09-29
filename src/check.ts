@@ -8,6 +8,10 @@ const db = require('better-sqlite3-helper');
 // --------------------------------------------------------------
 // --------------------------------------------------------------
 async function main() {
+  // command line parameters:
+  // process.argv[2]: chain (optional)
+  // process.argv[3]: atBlock (optional)
+
   const config = LoadConfigFile();
 
   // check given chain
@@ -19,6 +23,7 @@ async function main() {
     console.log('        with chain in [%s]', chains);
     return;
   }
+
 
   // open database
   const options = {
@@ -46,8 +51,10 @@ async function main() {
   }
 
   const lastBlock = Number(db().queryFirstRow('SELECT max(height) AS val FROM transactions').val);
-  const date = db().queryFirstRow('SELECT datetime(timestamp/1000, \'unixepoch\', \'localtime\') as val FROM transactions WHERE height=?', lastBlock).val;
-  console.log('Balance data at Block: %d (%s)', lastBlock, date);
+  const sBlock = process.argv[3];   // the block nuber was given by command line?
+  const atBlock = isNaN(+sBlock) ? lastBlock : Math.min(+sBlock, lastBlock);  // not behind lastBlock
+  const date = db().queryFirstRow('SELECT datetime(timestamp/1000, \'unixepoch\', \'localtime\') as val FROM transactions WHERE height=?', atBlock)?.val;
+  console.log('Balance data at Block: %d (%s)', atBlock, date ? date : '?');
 
   // iterate over all test accounts
   for (let i = 0, n = chainData.check_accounts.length; i < n; i++) {
@@ -56,18 +63,18 @@ async function main() {
     const plancks = BigInt(chainData.planckPerUnit);
 
     // balance calculation
-    const feesReceived: bigint = db().queryFirstRow('SELECT sum(feeBalances) AS val FROM transactions WHERE authorId=?', accountID).val || BigInt(0);
+    const feesReceived: bigint = db().queryFirstRow('SELECT sum(feeBalances) AS val FROM transactions WHERE authorId=? and height<=?', accountID, atBlock).val || BigInt(0);
     // feesPaid calculated from feeBalances and feeTreasury:
-    const feesPaid: bigint = db().queryFirstRow('SELECT COALESCE(sum(feeBalances), 0)+COALESCE(sum(feeTreasury), 0) AS val FROM transactions WHERE senderId=?', accountID).val || BigInt(0);
+    const feesPaid: bigint = db().queryFirstRow('SELECT COALESCE(sum(feeBalances), 0)+COALESCE(sum(feeTreasury), 0) AS val FROM transactions WHERE senderId=? and height<=?', accountID, atBlock).val || BigInt(0);
     // feesPaid calculated from partialFee:
-    // const feesPaid : bigint = db().queryFirstRow('SELECT COALESCE(sum(partialFee), 0)+COALESCE(sum(tip), 0) AS val FROM transactions WHERE senderId=?', accountID).val || BigInt(0);
-    const paid: bigint = db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE senderId=?', accountID).val || BigInt(0);
-    const received: bigint = db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE recipientId=?', accountID).val || BigInt(0);
+    // const feesPaid : bigint = db().queryFirstRow('SELECT COALESCE(sum(partialFee), 0)+COALESCE(sum(tip), 0) AS val FROM transactions WHERE senderId=? and height<=?', accountID, atBlock).val || BigInt(0);
+    const paid: bigint = db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE senderId=? and height<=?', accountID, atBlock).val || BigInt(0);
+    const received: bigint = db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE recipientId=? and height<=?', accountID, atBlock).val || BigInt(0);
     const total: bigint = feesReceived + received - feesPaid - paid;
     const totalD = Divide(total, plancks);
 
     // balance from API
-    const hash = await api.rpc.chain.getBlockHash(lastBlock);
+    const hash = await api.rpc.chain.getBlockHash(atBlock);
     const balance = await handler.fetchBalance(hash, accountID);
     const balanceTotal = BigInt(balance.reserved) + BigInt(balance.free);
     const balanceTotalD = Divide(balanceTotal, plancks);
