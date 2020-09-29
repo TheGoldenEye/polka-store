@@ -126,7 +126,7 @@ async function ProcessStakingSlashEvents(data: TBlockData, onIF: IOnInitializeOr
       const tx: TTransaction = {
         chain: data.db.chain,
         id: data.block.number + '_onInitialize_ev' + index,
-        height: data.block.number.toNumber(),
+        height: data.blockNr,
         blockHash: data.block.hash.toString(),
         type: ev.method,     // exceptionally we use here the event method, because there is no extrinsic
         subType: undefined,
@@ -212,7 +212,7 @@ async function ProcessGeneral(data: TBlockData, ex: IExtrinsic, idxEx: number, v
     const tx: TTransaction = {
       chain: data.db.chain,
       id: data.block.number + '-' + idxEx,
-      height: data.block.number.toNumber(),
+      height: data.blockNr,
       blockHash: data.block.hash.toString(),
       type: method,
       subType: subType,
@@ -249,7 +249,6 @@ async function ProcessEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev
     ProcessReserveRepatriatedEvents(data, ex, exIdx, ev, evIdx),
     ProcessMissingEvents(data, ex, exIdx, ev, evIdx, specVer)
   ]);
-
 }
 
 // --------------------------------------------------------------
@@ -260,7 +259,7 @@ async function ProcessTransferEvents(data: TBlockData, ex: IExtrinsic, exIdx: nu
     const tx: TTransaction = {
       chain: data.db.chain,
       id: data.block.number + '-' + exIdx + '_ev' + evIdx,
-      height: data.block.number.toNumber(),
+      height: data.blockNr,
       blockHash: data.block.hash.toString(),
       type: ex.method,
       subType: undefined,
@@ -292,7 +291,7 @@ async function ProcesDustLostEvents(data: TBlockData, ex: IExtrinsic, exIdx: num
     const tx: TTransaction = {
       chain: data.db.chain,
       id: data.block.number + '-' + exIdx + '_ev' + evIdx,
-      height: data.block.number.toNumber(),
+      height: data.blockNr,
       blockHash: data.block.hash.toString(),
       type: ex.method,
       subType: undefined,
@@ -325,6 +324,7 @@ async function ProcessStakingRewardEvents(data: TBlockData, ex: IExtrinsic, exId
     let payee = stashId;                    // init payee
 
     // get reward destination from api
+
     const rd = await data.api.query.staking.payee.at(data.block.hash, stashId);
     if (rd.isAccount)                       // reward dest: an explicitely given account 
       payee = rd.asAccount.toString();
@@ -334,7 +334,7 @@ async function ProcessStakingRewardEvents(data: TBlockData, ex: IExtrinsic, exId
     const tx: TTransaction = {
       chain: data.db.chain,
       id: data.block.number + '-' + exIdx + '_ev' + evIdx,
-      height: data.block.number.toNumber(),
+      height: data.blockNr,
       blockHash: data.block.hash.toString(),
       type: ex.method,
       subType: undefined,
@@ -366,7 +366,7 @@ async function ProcessReserveRepatriatedEvents(data: TBlockData, ex: IExtrinsic,
     const tx: TTransaction = {
       chain: data.db.chain,
       id: data.block.number + '-' + exIdx + '_ev' + evIdx,
-      height: data.block.number.toNumber(),
+      height: data.blockNr,
       blockHash: data.block.hash.toString(),
       type: ex.method,
       subType: undefined,
@@ -415,7 +415,7 @@ async function ProcessMissingEvents(data: TBlockData, ex: IExtrinsic, exIdx: num
     const tx: TTransaction = {
       chain: data.db.chain,
       id: data.block.number + '-' + exIdx + '_ev' + evIdx + '_1',
-      height: data.block.number.toNumber(),
+      height: data.blockNr,
       blockHash: data.block.hash.toString(),
       type: ex.method,
       subType: undefined,
