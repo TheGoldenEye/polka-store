@@ -171,16 +171,17 @@ async function ProcessExtrinsics(data: TBlockData): Promise<void> {
     await ProcessGeneral(data, ex, exIdx, ver);
 
     // 2. process events attached to extrinsics
-    /*
-        if (methodsToScan.includes(method))
-          await Promise.all(ex.events.map(async (ev: ISanitizedEvent, evIdx: number) => {
-            await ProcessEvents(data, ex, exIdx, ev, evIdx, ver.specVersion.toNumber());
-          }));
-    */
+    if (methodsToScan.includes(method))
+      await Promise.all(ex.events.map(async (ev: ISanitizedEvent, evIdx: number) => {
+        await ProcessEvents(data, ex, exIdx, ev, evIdx, ver.specVersion.toNumber());
+      }));
+
     // sequential:
+    /*
     if (methodsToScan.includes(method))
       for (let i = 0, n = ex.events.length; i < n; i++)
         await ProcessEvents(data, ex, exIdx, ex.events[i], i, ver.specVersion.toNumber());
+    */
   }
 
 
