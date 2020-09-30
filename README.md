@@ -33,45 +33,15 @@ First you have to clone the repository:
 git clone https://github.com/TheGoldenEye/polka-store.git
 ```
 
-#### 2.1.2 Rust
-
-The project uses rust code to calculate the transaction fees. Please make sure
-your machine has an up-to-date version of `rustup` installed.  
-Please check, if `rustup` is installed:
-
-``` bash
-rustup -V
-```
-
-If rustup is not installed, please install rust from here: <https://www.rust-lang.org/tools/install>
-
-Alternatively you can execute the rust installer directly:
-
-``` bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
-
-Hint: The rust installer changes the PATH environment variable.
-If the `rustup` command is still unavailable, restart the console and/or logoff the user.
-
-#### 2.1.3 Needad packages
+#### 2.1.2 Needed packages
 
 We need some prerequisites:
 
 ``` bash
-sudo apt install pkg-config node-typescript libssl-dev npm build-essential
+sudo apt install node-typescript npm
 ```
 
-#### 2.1.4 Install wasm-pack
-
-`wasm-pack` is needed by the rust code.
-Please install it, if your machine does not already have it:
-
-``` bash
-cargo install wasm-pack
-```
-
-#### 2.1.5 Minimum node.js version
+#### 2.1.3 Minimum node.js version
 
 Now its time to check the nodejs version:
 
@@ -90,7 +60,7 @@ sudo n lts
 
 Now you should have a current node version installed.
 
-#### 2.1.6 yarn package manager
+#### 2.1.4 yarn package manager
 
 This repo uses yarn workspaces to organise the code.
 As such, after cloning, its dependencies should be installed via yarn package manager,
@@ -339,7 +309,7 @@ I would be happy if you nominate my validators in the Polkadot / Kusama networks
 
 ## 11 License
 
-Apache-2.0  
+GPL-3.0 License  
 Copyright (c) 2020 GoldenEye
 
 **Disclaimer:

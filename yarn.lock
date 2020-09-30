@@ -86,9 +86,6 @@
     eventemitter3 "^4.0.7"
     rxjs "^6.6.3"
 
-"@polkadot/calc-fee@file:./calc-fee/pkg":
-  version "0.1.0"
-
 "@polkadot/keyring@^3.5.1":
   version "3.5.1"
   resolved "https://registry.yarnpkg.com/@polkadot/keyring/-/keyring-3.5.1.tgz#6a884be3812640efc26e6a7bc0a72eb590023790"

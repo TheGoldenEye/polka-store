@@ -192,7 +192,7 @@ async function ProcessExtrinsics(data: TBlockData): Promise<void> {
 async function ProcessGeneral(data: TBlockData, ex: IExtrinsic, idxEx: number, ver: RuntimeVersion): Promise<void> {
 
   if (ex.signature) { // there is a signer
-    const pf = (<RuntimeDispatchInfo>ex.info).partialFee;
+    //const pf = (<RuntimeDispatchInfo>ex.info).partialFee;
 
     let subType: string | undefined = undefined;
     const method = ex.method;
@@ -226,7 +226,7 @@ async function ProcessGeneral(data: TBlockData, ex: IExtrinsic, idxEx: number, v
       recipientId: undefined,
       amount: undefined,
       //      totalFee: undefined,
-      partialFee: pf ? BigInt(pf) : undefined,  // pf can be undefined: maybe because "Fee calculation not supported for westend#8"
+      partialFee: /*pf ? BigInt(pf) :*/ undefined,  // pf can be undefined: maybe because "Fee calculation not supported for westend#8"
       feeBalances: undefined,
       feeTreasury: undefined,
       tip: BigInt(ex.tip),

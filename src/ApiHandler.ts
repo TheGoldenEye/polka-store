@@ -15,11 +15,11 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import { ApiPromise } from '@polkadot/api';
-import { CalcFee } from '@polkadot/calc-fee';
+//import { CalcFee } from '@polkadot/calc-fee';
 import { Metadata, Struct } from '@polkadot/types';
 import { GenericCall } from '@polkadot/types/generic';
 import {
-	DispatchInfo,
+	//	DispatchInfo,
 	EraIndex,
 	Hash,
 	RuntimeDispatchInfo,
@@ -62,6 +62,7 @@ export default class ApiHandler {
 		]);
 
 		const { parentHash, number, stateRoot, extrinsicsRoot } = block.header;
+		/*
 		const parentParentHash = await (async function () {
 			if (block.header.number.toNumber() > 1) {
 				return (await api.rpc.chain.getHeader(parentHash)).parentHash;
@@ -69,6 +70,7 @@ export default class ApiHandler {
 				return parentHash;
 			}
 		})();
+		*/
 
 		const onInitialize = { events: [] as ISanitizedEvent[] };
 		const onFinalize = { events: [] as ISanitizedEvent[] };
@@ -184,6 +186,7 @@ export default class ApiHandler {
 			};
 		}
 
+		/*
 		const perByte = api.consts.transactionPayment.transactionByteFee;
 		const extrinsicBaseWeight = api.consts.system.extrinsicBaseWeight;
 		const multiplier = await api.query.transactionPayment.nextFeeMultiplier.at(
@@ -206,6 +209,7 @@ export default class ApiHandler {
 				};
 			}
 		);
+
 		const calcFee = CalcFee.from_params(
 			coefficients,
 			BigInt(extrinsicBaseWeight.toString()),
@@ -285,6 +289,7 @@ export default class ApiHandler {
 				extrinsics[idx].info = { error: 'Unable to fetch fee info' };
 			}
 		}
+		*/
 
 		return {
 			number,
