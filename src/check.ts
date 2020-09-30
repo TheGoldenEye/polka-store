@@ -1,6 +1,7 @@
 // Required imports
 import ApiHandler from './ApiHandler';
 import { InitAPI, Divide, LoadConfigFile } from './utils';
+import * as chalk from 'chalk';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const db = require('better-sqlite3-helper');
@@ -81,13 +82,15 @@ async function main() {
 
     console.log('------------------------------------------',);
     console.log('Account:     %s (%s)', name, accountID);
-    //console.log('feesReceived:%d %s', feesReceived / plancks, chainData.unit);
-    //console.log('feesPaid:    %d %s', feesPaid / plancks, chainData.unit);
-    //console.log('paid:        %d %s', paid / plancks, chainData.unit);
-    //console.log('received:    %d %s', received / plancks, chainData.unit);
     console.log('Balance:     %d %s (calculated)', totalD, chainData.unit);
-    console.log('Balance:     %d %s (from API)', balanceTotalD, chainData.unit);
-    console.log('Difference:  %d %s', Divide(balanceTotal - total, plancks), chainData.unit);
+    const diff = Divide(balanceTotal - total, plancks);
+    if (!diff) {
+      console.log(chalk.green('Balance ok'));
+    }
+    else {
+      console.log('Balance:     %d %s (from API)', balanceTotalD, chainData.unit);
+      console.log(chalk.red('Difference:  ' + diff + ' ' + chainData.unit));
+    }
   }
 }
 
