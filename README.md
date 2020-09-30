@@ -262,29 +262,50 @@ Here you can find the database structure:
 
 ## 7 Check mode
 
-To make sure that I have all balance relevant transactions in the database,
-I implemented a check mode. You can configure several accounts to check in config.json:
+To make sure that all balance relevant transactions are in the database,
+I implemented a check mode. You can configure several accounts for balance check in the config.json:
 
 ``` bash
 "check_accounts": [
-        "14K61ECxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-        "165jxPGyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
-        "14GYRjnzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+        { "name": "Example1", "account": "5FnD6fKjTFLDKwBvrieQ6ZthZbgMjppynLhKqiRUft9yr8Nf" },
+        { "name": "Example2", "account": "5DfdW2r2hyXzGdXFqAVJKGrtxV2UaacnVNr3sAdgCUDc9N9g" }
       ]
 ```
 
 After configuring the accounts, you can start the check mode with one of the following commands:
 
 ``` bash
-yarn check_polkadot
-yarn check_kusama
-yarn check_westend
+yarn check_polkadot [blockNr]
+yarn check_kusama [blockNr]
+yarn check_westend [blockNr]
 ```
 
-For each account the balance at block xxxx (last block in database) will be
-calculated based on the database entries. Please check the results with the real
-balances and report possible missing transactions or issues.  
+For each account the balance at block **blockNr* (or the last block in database,
+if **blockNr* is not given) will be calculated based on the database entries.  
+Please check the results and report possible missing transactions or issues.  
 Thank you for your support!
+
+Here is the example output for westend:
+
+``` bash
+polka-store: v1.0.2
+Chain:       Westend
+Node:        Parity Polkadot v0.8.23-d327000a-x86_64-linux-gnu
+Provider:    ws://127.0.0.1:9944
+API:         @polkadot/api v2.0.1
+
+##########################################
+Chain: Westend
+Balance data at Block: 2437795 (2020-09-30 16:35:48)
+------------------------------------------
+Account:     Example1 (5FnD6fKjTFLDKwBvrieQ6ZthZbgMjppynLhKqiRUft9yr8Nf)
+Balance:     9899.991 WND (calculated)
+Balance ok
+------------------------------------------
+Account:     Example2 (5DfdW2r2hyXzGdXFqAVJKGrtxV2UaacnVNr3sAdgCUDc9N9g)
+Balance:     5371.270799999971 WND (calculated)
+Balance ok
+```
 
 ## 8 Contributions
 
