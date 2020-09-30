@@ -280,8 +280,8 @@ yarn check_kusama [blockNr]
 yarn check_westend [blockNr]
 ```
 
-For each account the balance at block **blockNr* (or the last block in database,
-if **blockNr* is not given) will be calculated based on the database entries.  
+For each account the balance at block **blockNr** (or the last block in database,
+if **blockNr** is not given) will be calculated based on the database entries.  
 Please check the results and report possible missing transactions or issues.  
 Thank you for your support!
 
