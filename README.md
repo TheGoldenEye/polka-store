@@ -95,7 +95,7 @@ You can adapt this file to your needs.
 Here are the parameters defined for the different chains.  
 Besides the `check_accounts` option there is currently no need to change the default configuration:
 
-``` bash
+``` json
 {
   "filename": "",
   "defchain": "Polkadot",
@@ -199,10 +199,28 @@ yarn westend
 **Hint:** If you're connected to your own (or local) node, the chain of the node must match the given chain parameter.
 Otherwise the program is cancelled.
 
-## 5 Output
+Your console will show information like this:
+
+``` text
+Chain:       Polkadot
+Node:        Parity Polkadot v0.8.24-5cbc418a-x86_64-linux-gnu
+Provider:    ws://127.0.0.1:9944
+API:         @polkadot/api v2.0.1
+
+Press "Ctrl+C" to cancel ...
+Block 1823200 / 1831272, 41.8 ms/block, time left: 0 hours 5 min 37 sec
+Block 1823354 / 1831273, 43 ms/block, time left: 0 hours 5 min 40 sec
+Block 1823521 / 1831274, 36 ms/block, time left: 0 hours 4 min 39 sec
+Block 1823668 / 1831275, 41 ms/block, time left: 0 hours 5 min 11 sec
+Block 1823820 / 1831276, 39.8 ms/block, time left: 0 hours 4 min 56 sec
+```
+
+You can find the block currently scanned, the maximum block count, the processing speed and an estimation, how much time is still needed.
+
+## 5 Database Output
 
 The created SQLite database you can find (by default) in the data directory.  
-Here you can find the database structure:
+This is the database structure:
 
 |  Column            | Description                                               |
 |:-------------------|:----------------------------------------------------------|
@@ -235,7 +253,7 @@ Here you can find the database structure:
 To make sure that all balance relevant transactions are in the database,
 I implemented a check mode. You can configure several accounts for balance check in the config.json:
 
-``` bash
+``` json
 "check_accounts": [
         { "name": "Example1", "account": "5FnD6fKjTFLDKwBvrieQ6ZthZbgMjppynLhKqiRUft9yr8Nf" },
         { "name": "Example2", "account": "5DfdW2r2hyXzGdXFqAVJKGrtxV2UaacnVNr3sAdgCUDc9N9g" }
@@ -257,7 +275,7 @@ Thank you for your support!
 
 Here is the example output for westend:
 
-``` bash
+``` text
 polka-store: v1.0.2
 Chain:       Westend
 Node:        Parity Polkadot v0.8.23-d327000a-x86_64-linux-gnu
