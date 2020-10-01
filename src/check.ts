@@ -66,9 +66,8 @@ async function main() {
     // balance calculation
     const feesReceived: bigint = db().queryFirstRow('SELECT sum(feeBalances) AS val FROM transactions WHERE authorId=? and height<=?', accountID, atBlock).val || BigInt(0);
     // feesPaid calculated from feeBalances and feeTreasury:
-    const feesPaid: bigint = db().queryFirstRow('SELECT COALESCE(sum(feeBalances), 0)+COALESCE(sum(feeTreasury), 0) AS val FROM transactions WHERE senderId=? and height<=?', accountID, atBlock).val || BigInt(0);
-    // feesPaid calculated from partialFee:
-    // const feesPaid : bigint = db().queryFirstRow('SELECT COALESCE(sum(partialFee), 0)+COALESCE(sum(tip), 0) AS val FROM transactions WHERE senderId=? and height<=?', accountID, atBlock).val || BigInt(0);
+    //const feesPaid: bigint = db().queryFirstRow('SELECT COALESCE(sum(feeBalances), 0)+COALESCE(sum(feeTreasury), 0) AS val FROM transactions WHERE senderId=? and height<=?', accountID, atBlock).val || BigInt(0);
+    const feesPaid: bigint = db().queryFirstRow('SELECT sum(totalFee) AS val FROM transactions WHERE senderId=? and height<=?', accountID, atBlock).val || BigInt(0);
     const paid: bigint = db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE senderId=? and height<=?', accountID, atBlock).val || BigInt(0);
     const received: bigint = db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE recipientId=? and height<=?', accountID, atBlock).val || BigInt(0);
     const total: bigint = feesReceived + received - feesPaid - paid;

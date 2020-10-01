@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { sleep } from './utils';
+
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const db = require('better-sqlite3-helper');
@@ -7,7 +9,7 @@ const db = require('better-sqlite3-helper');
 export type TTransaction = {
   chain: string, id: string, height: number, blockHash: string, type: string, subType: string | undefined, event: string | undefined, timestamp: number,
   specVersion: number | undefined, transactionVersion: number | undefined, authorId: string | undefined, senderId: string | undefined, recipientId: string | undefined,
-  amount: bigint | undefined, /*totalFee: bigint | undefined,*/ partialFee: bigint | undefined, feeBalances: bigint | undefined, feeTreasury: bigint | undefined, tip: bigint | undefined, success: number | undefined
+  amount: bigint | undefined, totalFee: bigint | undefined, feeBalances: bigint | undefined, feeTreasury: bigint | undefined, tip: bigint | undefined, success: number | undefined
 };
 
 export default class CTxDB {
@@ -32,10 +34,18 @@ export default class CTxDB {
       this._options.path = filename;
     this._chain = chain;
 
+    // write migration message after 2s, if necessary 
+    const timeoutMigration = setTimeout(() => {
+      console.log('Apply database migrations, please wait ...\n');
+    }, 10);
+
     db(this._options);
     db().defaultSafeIntegers(true);
     this._db = db;
     this._maxHeight = this.CalcMaxHeight();
+
+    // kill migration message, if not done
+    clearTimeout(timeoutMigration);
 
     process.on('exit', () => db().close());     // close database on exit
   }

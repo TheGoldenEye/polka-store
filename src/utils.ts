@@ -1,6 +1,6 @@
 // Required imports
 import { ApiPromise, WsProvider } from '@polkadot/api';
-import { BlockHash, RuntimeDispatchInfo, RuntimeVersion } from '@polkadot/types/interfaces'
+import { BlockHash, RuntimeVersion } from '@polkadot/types/interfaces'
 import { IBlock, IExtrinsic, ISanitizedEvent, IOnInitializeOrFinalize } from './types';
 import ApiHandler from './ApiHandler';
 import CTxDB, { TTransaction } from './db';
@@ -138,8 +138,7 @@ async function ProcessStakingSlashEvents(data: TBlockData, onIF: IOnInitializeOr
         senderId: ev.data[0].toString(),
         recipientId: undefined,
         amount: BigInt(ev.data[1]),
-        //        totalFee: undefined,
-        partialFee: undefined,
+        totalFee: undefined,
         feeBalances: undefined,
         feeTreasury: undefined,
         tip: undefined,
@@ -225,8 +224,7 @@ async function ProcessGeneral(data: TBlockData, ex: IExtrinsic, idxEx: number, v
       senderId: ex.signature.signer.toString(),
       recipientId: undefined,
       amount: undefined,
-      //      totalFee: undefined,
-      partialFee: /*pf ? BigInt(pf) :*/ undefined,  // pf can be undefined: maybe because "Fee calculation not supported for westend#8"
+      totalFee: undefined,
       feeBalances: undefined,
       feeTreasury: undefined,
       tip: BigInt(ex.tip),
@@ -272,8 +270,7 @@ async function ProcessTransferEvents(data: TBlockData, ex: IExtrinsic, exIdx: nu
       senderId: ev.data[0].toString(),
       recipientId: ev.data[1].toString(),
       amount: BigInt(ev.data[2]),
-      //      totalFee: undefined,
-      partialFee: undefined,
+      totalFee: undefined,
       feeBalances: undefined,
       feeTreasury: undefined,
       tip: undefined,
@@ -304,8 +301,7 @@ async function ProcesDustLostEvents(data: TBlockData, ex: IExtrinsic, exIdx: num
       senderId: ev.data[0].toString(),
       recipientId: undefined,
       amount: BigInt(ev.data[1]),
-      //      totalFee: undefined,
-      partialFee: undefined,
+      totalFee: undefined,
       feeBalances: undefined,
       feeTreasury: undefined,
       tip: undefined,
@@ -347,8 +343,7 @@ async function ProcessStakingRewardEvents(data: TBlockData, ex: IExtrinsic, exId
       senderId: undefined,
       recipientId: payee,
       amount: BigInt(ev.data[1]),
-      //      totalFee: undefined,
-      partialFee: undefined,
+      totalFee: undefined,
       feeBalances: undefined,
       feeTreasury: undefined,
       tip: undefined,
@@ -379,8 +374,7 @@ async function ProcessReserveRepatriatedEvents(data: TBlockData, ex: IExtrinsic,
       senderId: ev.data[0].toString(),
       recipientId: ev.data[1].toString(),
       amount: BigInt(ev.data[2]),
-      //      totalFee: undefined,
-      partialFee: undefined,
+      totalFee: undefined,
       feeBalances: undefined,
       feeTreasury: undefined,
       tip: undefined,
@@ -428,8 +422,7 @@ async function ProcessMissingEvents(data: TBlockData, ex: IExtrinsic, exIdx: num
       senderId: ev.data[0].toString(),
       recipientId: registrar.account.toString(),
       amount: BigInt(registrar.fee),
-      //      totalFee: undefined,
-      partialFee: undefined,
+      totalFee: undefined,
       feeBalances: undefined,
       feeTreasury: undefined,
       tip: undefined,
@@ -454,9 +447,9 @@ function CalcTotalFee(ex: IExtrinsic, tx: TTransaction): boolean {
       }
     });
 
-  //  if (tx.feeBalances || tx.feeTreasury)
-  //    tx.totalFee = (tx.feeBalances || BigInt(0)) + (tx.feeTreasury || BigInt(0));
-  return !ex.paysFee || (tx.feeBalances != undefined);
+  if (tx.feeBalances || tx.feeTreasury)
+    tx.totalFee = (tx.feeBalances || BigInt(0)) + (tx.feeTreasury || BigInt(0));
+  return !ex.paysFee || (tx.totalFee != undefined);
 }
 
 // --------------------------------------------------------------

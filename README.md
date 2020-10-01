@@ -96,6 +96,7 @@ Here are the parameters defined for the different chains.
 Besides the `check_accounts` option there is currently no need to change the default configuration:
 
 ``` json
+config.json:
 {
   "filename": "",
   "defchain": "Polkadot",
@@ -154,9 +155,12 @@ Besides the `check_accounts` option there is currently no need to change the def
 filename is set automatically: "data/\<chainname\>.db"  
 **defchain:** The chain which is used (if no chain is given in the command line)  
 **_Chain specific settings:_**  
-**providers:** An array of websocket urls describing the nodes to connect. The program tries to connect the first node in list, if connection fails, the next one is used.  
-**startBlock:** The first block in the chain to be scanned. The default values refer to the blocks with the first transactions on chain.
-If the database is empty, the block scan starts at this block, if not, at the last block stored in the database.  
+**providers:** An array of websocket urls describing the nodes to connect.
+The program tries to connect the first node in list, if connection fails, the next one is used.  
+**startBlock:** The first block in the chain to be scanned. The default values
+refer to the blocks with the first transactions on chain.
+If the database is empty or does not exist, the block scan starts at this block,
+if not, at the last block stored in the database.  
 **PlanckPerUnit:** Defines the number of Plancks per DOT/KSM/WND, or simply the count of decimal places  
 **check_accounts:** A list of accounts used in check mode (see below)
 
@@ -172,9 +176,9 @@ Available example databases:
 
 |  Database   | Last Block |     Date     |   Download   |
 |:------------|:-----------|:-------------|:-------------|
-| Polkadot.db | 1687349    | Sep 21, 2020 | [Polkadot.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)  |
-| Kusama.db   | 4140035    | Sep 21, 2020 | [Kusama.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)    |
-| Westend.db  | 2247538    | Sep 16, 2020 | [Westend.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)   |
+| Polkadot.db | 1840392    | Oct 02, 2020 | [Polkadot.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)  |
+| Kusama.db   | 4292721    | Oct 02, 2020 | [Kusama.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)    |
+| Westend.db  | 2456695    | Oct 02, 2020 | [Westend.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)   |
 
 ## 4 Running
 
@@ -238,9 +242,9 @@ This is the database structure:
 | senderId           | the account id of the block signer / transaction sender   |
 | recipientId        | the account id of the transaction recipient               |
 | amount             | the amount which was sent or rewarded                     |
-| partialFee         | the fee which was paid by the block signer                |
-| feeBalances        | the part of the fee that passed to the block author       |
-| feeTreasury        | the part of the fee that passed to the treasury           |
+| totalFee           | the fee which was paid by the block signer                |
+| feeBalances        | the part of the totalFee that passed to the block author  |
+| feeTreasury        | the part of the totalFee that passed to the treasury      |
 | tip                | an additional tip paid by the block signer                |
 | success            | the transaction was successfull                           |
 
@@ -268,8 +272,8 @@ yarn check_kusama [blockNr]
 yarn check_westend [blockNr]
 ```
 
-For each account the balance at block **blockNr** (or the last block in database,
-if **blockNr** is not given) will be calculated based on the database entries.  
+For each account the balance at block `blockNr` (or the last block in database,
+if `blockNr` is not given) will be calculated based on the database entries.  
 Please check the results and report possible missing transactions or issues.  
 Thank you for your support!
 
