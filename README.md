@@ -245,7 +245,7 @@ This is the database structure:
 | totalFee           | the fee which was paid by the block signer                |
 | feeBalances        | the part of the totalFee that passed to the block author  |
 | feeTreasury        | the part of the totalFee that passed to the treasury      |
-| tip                | an additional tip paid by the block signer                |
+| tip                | an additional tip paid by the block signer (is part of feeBalances)|
 | success            | the transaction was successfull                           |
 
 ## 6 Known issues
@@ -311,8 +311,7 @@ I welcome contributions. Before submitting your PR, make sure to run the followi
 ## 9 Authors
 
 - GoldenEye
-- Used some parts of the "Substrate API Sidecar" project <https://github.com/paritytech/substrate-api-sidecar>  
-  (Fee calculation tool and API-Handler)
+- Used the API-Handler from the "Substrate API Sidecar" project <https://github.com/paritytech/substrate-api-sidecar>
 
 ## 10 Please support me
 
