@@ -1,7 +1,6 @@
 // Required imports
-import ApiHandler from './ApiHandler';
-import CTxDB from './db';
-import CLogBlockNr, { InitAPI, ProcessBlockData, LoadConfigFile } from './utils';
+import { LoadConfigFile } from './utils';
+import { CPolkaStore } from "./CPolkaStore";
 
 // --------------------------------------------------------------
 // --------------------------------------------------------------
@@ -23,26 +22,14 @@ async function main() {
     return;
   }
 
-  const api = await InitAPI(chainData.providers, chain);
-
-  // Create API Handler
-  const handler = new ApiHandler(api);
+  const polkaStore = new CPolkaStore(chainData, chain);
+  await polkaStore.InitAPI();
 
   // Create transaction database instance
-  const db = new CTxDB(chain, config.filename || 'data/' + chain + '.db');
-
-  const maxBlock = db.GetMaxHeight();
-  const header = await api.rpc.chain.getHeader();
-  const LogBlock = new CLogBlockNr(api, Number(header.number))
+  polkaStore.InitDataBase(chain, config.filename || 'data/' + chain + '.db');
 
   console.log('Press "Ctrl+C" to cancel ...\n');
-
-  // scan the chain and write block data to database
-  const start = Math.max(maxBlock, chainData.startBlock)
-  for (let i = start; i <= LogBlock.LastBlock(); i++) {
-    await ProcessBlockData(api, handler, db, i, chain);
-    LogBlock.LogBlock(i, i == LogBlock.LastBlock());
-  }
+  await polkaStore.ScanChain();
 }
 
 main().catch(console.error).finally(() => { process.exit() });

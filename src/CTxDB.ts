@@ -9,7 +9,7 @@ export type TTransaction = {
   amount: bigint | undefined, totalFee: bigint | undefined, feeBalances: bigint | undefined, feeTreasury: bigint | undefined, tip: bigint | undefined, success: number | undefined
 };
 
-export default class CTxDB {
+export class CTxDB {
   private _options: any;
   private _db: any;
   private _chain: string;
@@ -31,10 +31,10 @@ export default class CTxDB {
       this._options.path = filename;
     this._chain = chain;
 
-    // write migration message after 2s, if necessary 
+    // write migration message after 1s, if necessary
     const timeoutMigration = setTimeout(() => {
       console.log('Apply database migrations, please wait ...\n');
-    }, 10);
+    }, 1000);
 
     db(this._options);
     db().defaultSafeIntegers(true);

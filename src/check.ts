@@ -1,6 +1,6 @@
 // Required imports
-import ApiHandler from './ApiHandler';
-import { InitAPI, Divide, LoadConfigFile } from './utils';
+import { Divide, LoadConfigFile } from './utils';
+import { CPolkaStore } from "./CPolkaStore";
 import * as chalk from 'chalk';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -25,7 +25,6 @@ async function main() {
     return;
   }
 
-
   // open database
   const options = {
     path: config.filename || 'data/' + chain + '.db',
@@ -39,10 +38,8 @@ async function main() {
 
   process.on('exit', () => db().close());     // close database on exit
 
-  const api = await InitAPI(chainData.providers, chain);
-
-  // Create API Handler
-  const handler = new ApiHandler(api);
+  const polkaStore = new CPolkaStore(chainData, chain);
+  await polkaStore.InitAPI();
 
   console.log('##########################################');
   console.log('Chain:', chain);
@@ -74,8 +71,7 @@ async function main() {
     const totalD = Divide(total, plancks);
 
     // balance from API
-    const hash = await api.rpc.chain.getBlockHash(atBlock);
-    const balance = await handler.fetchBalance(hash, accountID);
+    const balance = await polkaStore.fetchBalance(atBlock, accountID);
     const balanceTotal = BigInt(balance.reserved) + BigInt(balance.free);
     const balanceTotalD = Divide(balanceTotal, plancks);
 
