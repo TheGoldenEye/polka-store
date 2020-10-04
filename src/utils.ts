@@ -7,6 +7,7 @@ import CTxDB, { TTransaction } from './db';
 import * as getPackageVersion from '@jsbits/get-package-version'
 import * as fs from 'fs';
 import * as Ajv from 'ajv';
+import { sprintf } from 'sprintf-js';
 
 type TBlockData = {
   api: ApiPromise,
@@ -484,7 +485,8 @@ export default class CLogBlockNr {
       const s = timeLeft % 60
       const m = Math.floor(timeLeft / 60) % 60;
       const h = Math.floor(timeLeft / 3600);
-      console.log('Block %d / %d, %f ms/block, time left: %d hours %d min %d sec', blockNr, this._lastBlock, timePerBlock, h, m, s);
+      // console.log('Block %d / %d, %f ms/block, time left: %d hours %d min %d sec', blockNr, this._lastBlock, timePerBlock, h, m, s);
+      process.stdout.write(sprintf('\rBlock %d / %d, %3.0f ms/block, time left: %02d:%02d:%02d ', blockNr, this._lastBlock, timePerBlock, h, m, s));
       this._lastLoggingTime = d;
       this._lastLoggedBlock = blockNr;
     }

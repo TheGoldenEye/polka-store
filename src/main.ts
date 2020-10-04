@@ -7,7 +7,10 @@ import CLogBlockNr, { InitAPI, ProcessBlockData, LoadConfigFile } from './utils'
 // --------------------------------------------------------------
 async function main() {
 
-  process.on('SIGINT', () => process.exit()); // Ctrl+C pressed
+  process.on('SIGINT', () => {  // Ctrl+C pressed
+    console.log('');
+    process.exit();
+  });
 
   const config = LoadConfigFile();
 
@@ -32,7 +35,7 @@ async function main() {
   const header = await api.rpc.chain.getHeader();
   const LogBlock = new CLogBlockNr(api, Number(header.number))
 
-  console.log('Press "Ctrl+C" to cancel ...');
+  console.log('Press "Ctrl+C" to cancel ...\n');
 
   // scan the chain and write block data to database
   const start = Math.max(maxBlock, chainData.startBlock)
