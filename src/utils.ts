@@ -70,52 +70,39 @@ export async function InitAPI(providers: string[], expectedChain: string): Promi
 
 // --------------------------------------------------------------
 export async function ProcessBlockData(api: ApiPromise, handler: ApiHandler, db: CTxDB, blockNr: number, chain: string): Promise<void> {
-  const data: TBlockData = {
-    api: api,
-    handler: handler,
-    block: <IBlock><unknown>0,
-    blockHash: <BlockHash><unknown>0,
-    blockNr: blockNr,
-    txs: [],
-    db: db,
-    chain: chain
-  }
-
   try {
-    data.blockHash = await api.rpc.chain.getBlockHash(blockNr);
+    const data: TBlockData = {
+      api: api,
+      handler: handler,
+      block: <IBlock><unknown>0,
+      blockHash: await api.rpc.chain.getBlockHash(blockNr),
+      blockNr: blockNr,
+      txs: [],
+      db: db,
+      chain: chain
+    }
+    await ProcessBlockDataH(data);
   }
   catch (e) {
-    console.error('BlockNr:', blockNr, 'ProcessBlockData(): Error:', (e as Error).message)
+    console.error('BlockNr:', blockNr, 'Error:', (e as Error).message)
   }
-  return await ProcessBlockDataH(data);
 }
 
 // --------------------------------------------------------------
 export async function ProcessBlockDataH(data: TBlockData): Promise<void> {
-  try {
-    data.block = await data.handler.fetchBlock(data.blockHash);
-  }
-  catch (e) {
-    console.error('BlockNr:', data.blockNr, 'ProcessBlockDataH(): Error:', (e as Error).message)
-  }
-
-  return await ProcessBlockDataB(data);
+  data.block = await data.handler.fetchBlock(data.blockHash);
+  await ProcessBlockDataB(data);
 }
 
 // --------------------------------------------------------------
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export async function ProcessBlockDataB(data: TBlockData): Promise<void> {
-  try {
-    await Promise.all([
-      ProcessStakingSlashEvents(data, data.block.onInitialize),   // 1. process events attached directly to block
-      ProcessExtrinsics(data)                                     // 2. process extrinsics
-    ])
+  await Promise.all([
+    ProcessStakingSlashEvents(data, data.block.onInitialize),   // 1. process events attached directly to block
+    ProcessExtrinsics(data)                                     // 2. process extrinsics
+  ])
 
-    data.db.InsertTransactions(data.txs);
-  }
-  catch (e) {
-    console.error('BlockNr:', data.blockNr, 'ProcessBlockDataB(): Error:', (e as Error).message)
-  }
+  data.db.InsertTransactions(data.txs);
 }
 
 // --------------------------------------------------------------

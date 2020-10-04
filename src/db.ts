@@ -1,8 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { sleep } from './utils';
-
-
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const db = require('better-sqlite3-helper');
 
@@ -88,24 +85,16 @@ export default class CTxDB {
     if (!txs.length)
       return 0;
 
-    while (txs.length > 100) {
+    while (txs.length > 100) {    // only 100 tx per insert
       const txs1 = txs.slice(0, 100);
       txs.splice(0, 100);
       this.InsertTransactions(txs1);
     }
 
-    try {
-      // if we continue an existing database we remove (possibly corrupted) existing records with the same block number
-      if (txs[0].height == this._maxHeight)
-        db().run('DELETE FROM transactions WHERE height>=?', this._maxHeight);
+    // if we continue an existing database we remove (possibly incomplete) existing records with the same block number
+    if (txs[0].height == this._maxHeight)
+      db().run('DELETE FROM transactions WHERE height>=?', this._maxHeight);
 
-      const ret = db().insert('transactions', txs);
-      return ret;
-    }
-    catch (e) {
-      console.error((e as Error).message, txs);
-      return 0;
-    }
+    return db().insert('transactions', txs);
   }
-
 }

@@ -25,7 +25,6 @@ import {
 	RuntimeDispatchInfo,
 } from '@polkadot/types/interfaces';
 import { BlockHash } from '@polkadot/types/interfaces/chain';
-import { EventRecord } from '@polkadot/types/interfaces/system';
 import { u32 } from '@polkadot/types/primitive';
 import { Codec } from '@polkadot/types/types';
 import { u8aToHex } from '@polkadot/util';
@@ -58,7 +57,7 @@ export default class ApiHandler {
 		const { api } = this;
 		const [{ block }, events] = await Promise.all([
 			api.rpc.chain.getBlock(hash),
-			this.fetchEvents(api, hash),
+			api.query.system.events.at(hash),
 		]);
 
 		const { parentHash, number, stateRoot, extrinsicsRoot } = block.header;
@@ -641,17 +640,6 @@ export default class ApiHandler {
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
 				cause: err.toString(),
 			};
-		}
-	}
-
-	private async fetchEvents(
-		api: ApiPromise,
-		hash: BlockHash
-	): Promise<EventRecord[] | string> {
-		try {
-			return await api.query.system.events.at(hash);
-		} catch (_) {
-			return 'Unable to fetch Events, cannot confirm extrinsic status. Check pruning settings on the node.';
 		}
 	}
 
