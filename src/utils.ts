@@ -84,7 +84,7 @@ export async function ProcessBlockData(api: ApiPromise, handler: ApiHandler, db:
     await ProcessBlockDataH(data);
   }
   catch (e) {
-    console.error('BlockNr:', blockNr, 'Error:', (e as Error).message)
+    console.error('BlockNr: %d Error: %s\n------------------------------', blockNr, (e as Error).message)
   }
 }
 
