@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 1.2.0 Oct 05, 2020
+
+Changes:
+
+- updated dependency: @polkadot/api v2.1
+- smarter program output (one line)
+- better error handling
+- restructured source code
+
 ## 1.1.0 Oct 02, 2020
 
 Changes:
