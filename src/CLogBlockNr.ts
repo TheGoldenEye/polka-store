@@ -1,5 +1,6 @@
 import { ApiPromise } from '@polkadot/api';
 import { sprintf } from 'sprintf-js';
+import * as chalk from 'chalk';
 
 // --------------------------------------------------------------
 // block number console output
@@ -34,8 +35,8 @@ export class CLogBlockNr {
       const s = timeLeft % 60;
       const m = Math.floor(timeLeft / 60) % 60;
       const h = Math.floor(timeLeft / 3600);
-      // console.log('Err: %d, Block %d / %d, %f ms/block, time left: %d hours %d min %d sec', errors, blockNr, this._lastBlock, timePerBlock, h, m, s);
-      process.stdout.write(sprintf('\rErr: %d, Block %d / %d, %3.0f ms/block, time left: %02d:%02d:%02d ', errors, blockNr, this._lastBlock, timePerBlock, h, m, s));
+      const sErr = errors ? chalk.red('Err: ' + errors) : chalk.green('Err: 0');
+      process.stdout.write(sprintf('\r%s, Block %d / %d, %3.0f ms/block, time left: %02d:%02d:%02d  ', sErr, blockNr, this._lastBlock, timePerBlock, h, m, s));
       this._lastLoggingTime = d;
       this._lastLoggedBlock = blockNr;
     }

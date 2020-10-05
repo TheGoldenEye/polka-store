@@ -111,6 +111,7 @@ export class CPolkaStore {
       await this.ProcessBlockData(i);
       LogBlock.LogBlock(this._errors, i, i == LogBlock.LastBlock());
     }
+    console.log('\n');  // final line break
   }
 
   // --------------------------------------------------------------
