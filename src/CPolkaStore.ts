@@ -188,6 +188,7 @@ export class CPolkaStore {
           type: ev.method,
           subType: undefined,
           event: ev.method,
+          addData: undefined,
           timestamp: GetTime(data.block.extrinsics),
           specVersion: undefined,
           transactionVersion: undefined,
@@ -272,6 +273,7 @@ export class CPolkaStore {
         type: method,
         subType: subType,
         event: undefined,
+        addData: undefined,
         timestamp: GetTime(data.block.extrinsics),
         specVersion: ver.specVersion.toNumber(),
         transactionVersion: ver.transactionVersion.toNumber(),
@@ -317,6 +319,7 @@ export class CPolkaStore {
         type: ex.method,
         subType: undefined,
         event: ev.method,
+        addData: undefined,
         timestamp: GetTime(data.block.extrinsics),
         specVersion: undefined,
         transactionVersion: undefined,
@@ -348,6 +351,7 @@ export class CPolkaStore {
         type: ex.method,
         subType: undefined,
         event: ev.method,
+        addData: undefined,
         timestamp: GetTime(data.block.extrinsics),
         specVersion: undefined,
         transactionVersion: undefined,
@@ -374,8 +378,6 @@ export class CPolkaStore {
       const stashId = ev.data[0].toString(); // AcountID of validator
       let payee = stashId; // init payee
 
-
-
       // get reward destination from api
       const rd = await data.api.query.staking.payee.at(data.block.hash, stashId);
       if (rd.isAccount) // reward dest: an explicitely given account 
@@ -391,6 +393,7 @@ export class CPolkaStore {
         type: ex.method,
         subType: undefined,
         event: ev.method,
+        addData: stashId,
         timestamp: GetTime(data.block.extrinsics),
         specVersion: undefined,
         transactionVersion: undefined,
@@ -422,6 +425,7 @@ export class CPolkaStore {
         type: ex.method,
         subType: undefined,
         event: ev.method,
+        addData: undefined,
         timestamp: GetTime(data.block.extrinsics),
         specVersion: undefined,
         transactionVersion: undefined,
@@ -470,6 +474,7 @@ export class CPolkaStore {
         type: ex.method,
         subType: undefined,
         event: 'balances.ReserveRepatriated_e',
+        addData: undefined,
         timestamp: GetTime(data.block.extrinsics),
         specVersion: undefined,
         transactionVersion: undefined,
