@@ -5,6 +5,8 @@
     "Polkadot": {
       "providers": [
         "ws://127.0.0.1:9944",
+        "wss://polkadot.elara.patract.io",
+        "wss://polkadot.api.onfinality.io/public-ws",
         "wss://rpc.polkadot.io",
         "wss://cc1-1.polkadot.network"
       ],
@@ -20,6 +22,8 @@
       "providers": [
         "ws://127.0.0.1:9944",
         "wss://cc3-3.kusama.network",
+        "wss://kusama.elara.patract.io",
+        "wss://kusama.api.onfinality.io/public-ws",
         "wss://kusama-rpc.polkadot.io",
         "wss://cc3-1.kusama.network",
         "wss://cc3-2.kusama.network",
