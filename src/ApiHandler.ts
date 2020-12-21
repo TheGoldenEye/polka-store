@@ -16,7 +16,8 @@
 
 import { ApiPromise } from '@polkadot/api';
 //import { CalcFee } from '@polkadot/calc-fee';
-import { Metadata, Struct } from '@polkadot/types';
+import { Metadata } from '@polkadot/metadata';
+import { Struct } from '@polkadot/types';
 import { GenericCall } from '@polkadot/types/generic';
 import {
   //	DispatchInfo,

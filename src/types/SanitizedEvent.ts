@@ -1,6 +1,6 @@
-import { EventData } from '@polkadot/types/generic/Event';
+import { GenericEventData } from '@polkadot/types';
 
 export interface ISanitizedEvent {
 	method: string;
-	data: EventData;
+	data: GenericEventData;
 }

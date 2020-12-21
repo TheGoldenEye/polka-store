@@ -1,7 +1,5 @@
 import { Compact } from '@polkadot/types';
-import AccountId from '@polkadot/types/generic/AccountId';
-import Address from '@polkadot/types/generic/LookupSource';
-// before v1.31: import Address from '@polkadot/types/generic/Address';
+import { AccountId, Address } from '@polkadot/types/interfaces/runtime';
 import {
 	Balance,
 	BlockHash,
