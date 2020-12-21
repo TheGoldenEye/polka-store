@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 1.3.0 Dec 21, 2020
+
+Changes:
+
+- updated dependency: @polkadot/api v3.1.1
+- stores StashId with Staking.Reward events
+
 ## 1.2.0 Oct 05, 2020
 
 Changes:
