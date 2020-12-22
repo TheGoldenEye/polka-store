@@ -1,6 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "polka-store config file schema",
+  "type": "object",
   "definitions": {
     "NamedAccount": {
       "type": "object",
@@ -24,7 +25,7 @@
         "providers": {
           "description": "An array of websocket urls describing the nodes to connect. The program tries to connect the first node in list, if connection fails, the next one is used.",
           "type": "array",
-          "minLength": 1,
+          "minItems": 1,
           "items": {
             "type": "string"
           }
@@ -41,7 +42,8 @@
         },
         "planckPerUnit": {
           "description": "The count of plancks per coin unit.",
-          "minItems": 1
+          "type": "integer",
+          "minimum": 1
         },
         "check_accounts": {
           "type": "array",

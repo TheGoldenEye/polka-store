@@ -1,7 +1,7 @@
 // Required imports
 import { IExtrinsic } from './types';
 import * as fs from 'fs';
-import * as Ajv from 'ajv';
+import Ajv from "ajv";
 
 // --------------------------------------------------------------
 // wait ms milliseconds
