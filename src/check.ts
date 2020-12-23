@@ -14,12 +14,14 @@ async function main() {
   // process.argv[3]: atBlock (optional)
 
   const config = LoadConfigFile();
+  if (!config)
+    return;
 
   // check given chain
   const chain = process.argv[2] || config.defchain;
   const chainData = config.chains[chain];
   if (!chainData) {
-    console.log('Syntax: node build/test.js [chain]');
+    console.log('Syntax: node build/check.js [chain]');
     const chains = Object.keys(config.chains).join(', ');
     console.log('        with chain in [%s]', chains);
     return;

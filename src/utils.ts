@@ -1,7 +1,8 @@
 // Required imports
 import { IExtrinsic } from './types';
-import * as fs from 'fs';
 import Ajv from "ajv";
+import * as fs from 'fs';
+import * as chalk from 'chalk';
 
 // --------------------------------------------------------------
 // wait ms milliseconds
@@ -36,8 +37,11 @@ function ValidateConfigFile(config: any, schemaFile: string): any {
   const schema = JSON.parse(fs.readFileSync(schemaFile, 'utf8'));
   const validate = ajv.compile(schema);
 
-  if (!validate(config))
-    throw Error('Invalid structure of config.json: ' + ajv.errorsText(validate.errors));
+  if (!validate(config)) {
+    console.log(chalk.red(ajv.errorsText(validate.errors, { dataVar: 'config.json' })));
+    return undefined;
+  }
+
   return config;
 }
 

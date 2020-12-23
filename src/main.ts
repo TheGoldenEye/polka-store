@@ -12,6 +12,8 @@ async function main() {
   });
 
   const config = LoadConfigFile();
+  if (!config)
+    return;
 
   const chain = process.argv[2] || config.defchain;
   const chainData = config.chains[chain];
