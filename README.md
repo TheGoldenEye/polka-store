@@ -321,12 +321,13 @@ I would be happy if you nominate my validators in the Polkadot / Kusama networks
 **Polkadot:**
 
 1. [Validator GoldenEye](https://polkadot.subscan.io/account/14K71ECxvekU8BXGJmSQLed2XssM3HdBYQBuDUwHeUMUgBHk)
-2. [Validator GoldenEye/2](https://polkadot.subscan.io/account/13MjZA7vpcpxfGEUH2myFBkMxi3eSV2VUmActtUAFy2ESH4V)
+2. [Validator GoldenEye/2](https://polkadot.subscan.io/account/14gYRjn6fn5hu45zEAtXodPDbtaditK8twoWUXFi6DsLwd31)
 
 **Kusama:**
 
 1. [Validator GoldenEye](https://kusama.subscan.io/account/FiNuPk2iPirbKC7Spse3NuE9rWjzaQonZmk6wRvk1LcEU13)
 2. [Validator GoldenEye/2](https://kusama.subscan.io/account/GcQXL1HgF1ZETZi3Tw3PoXGWeXbDpfsJrrgNgwxde4uoVaB)
+3. [Validator GoldenEye/3](https://kusama.subscan.io/account/HjH4dvyPv2RQMA6XUQPqF37rZZ8seNjPQqYRSm3utdszsin)
 
 ## 11 License
 
