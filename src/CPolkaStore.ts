@@ -213,8 +213,10 @@ export class CPolkaStore {
   private async ProcessExtrinsics(data: TBlockData): Promise<void> {
 
     const methodsToScan = [
-      'utility.batch', 'proxy.proxy', 'multisig.asMulti',
-      'staking.payoutStakers', 'balances.transfer', 'balances.transferKeepAlive',
+      'utility.batch', 'utility.batch_all', 'utility.as_derivative',
+      'proxy.proxy', 'multisig.asMulti',
+      'staking.payoutStakers', 'staking.bond', 'staking.bond_extra', 'staking.unbond',
+      'balances.transfer', 'balances.transferKeepAlive',
       'identity.requestJudgement' // for ProcessMissingEvents
     ];
 
