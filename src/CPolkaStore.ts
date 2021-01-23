@@ -301,6 +301,8 @@ export class CPolkaStore {
       this.ProcessTransferEvents(data, ex, exIdx, ev, evIdx),
       this.ProcesDustLostEvents(data, ex, exIdx, ev, evIdx),
       this.ProcessStakingRewardEvents(data, ex, exIdx, ev, evIdx),
+      this.ProcessStakingBondedEvents(data, ex, exIdx, ev, evIdx),
+      this.ProcessStakingUnbondedEvents(data, ex, exIdx, ev, evIdx),
       this.ProcessReserveRepatriatedEvents(data, ex, exIdx, ev, evIdx),
       this.ProcessMissingEvents(data, ex, exIdx, ev, evIdx, specVer)
     ]);
@@ -401,6 +403,70 @@ export class CPolkaStore {
         senderId: undefined,
         recipientId: payee,
         amount: BigInt(ev.data[1]),
+        totalFee: undefined,
+        feeBalances: undefined,
+        feeTreasury: undefined,
+        tip: undefined,
+        success: undefined
+      };
+
+      data.txs.push(tx);
+    }
+  }
+
+  // --------------------------------------------------------------
+  // process staking.Bonded events
+  private async ProcessStakingBondedEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number): Promise<void> {
+    if (ev.method == 'staking.Bonded') {
+
+      const tx: TTransaction = {
+        chain: data.db.chain,
+        id: data.block.number + '-' + exIdx + '_ev' + evIdx,
+        height: data.blockNr,
+        blockHash: data.block.hash.toString(),
+        type: ex.method,
+        subType: undefined,
+        event: ev.method,
+        addData: ev.data[0].toString(), // AcountID of validator,
+        timestamp: GetTime(data.block.extrinsics),
+        specVersion: undefined,
+        transactionVersion: undefined,
+        authorId: undefined,
+        senderId: undefined,
+        recipientId: undefined,
+        amount: BigInt(ev.data[1]),
+        totalFee: undefined,
+        feeBalances: undefined,
+        feeTreasury: undefined,
+        tip: undefined,
+        success: undefined
+      };
+
+      data.txs.push(tx);
+    }
+  }
+
+  // --------------------------------------------------------------
+  // process staking.Unbonded events
+  private async ProcessStakingUnbondedEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number): Promise<void> {
+    if (ev.method == 'staking.Unbonded') {
+
+      const tx: TTransaction = {
+        chain: data.db.chain,
+        id: data.block.number + '-' + exIdx + '_ev' + evIdx,
+        height: data.blockNr,
+        blockHash: data.block.hash.toString(),
+        type: ex.method,
+        subType: undefined,
+        event: ev.method,
+        addData: ev.data[0].toString(), // AcountID of validator,
+        timestamp: GetTime(data.block.extrinsics),
+        specVersion: undefined,
+        transactionVersion: undefined,
+        authorId: undefined,
+        senderId: undefined,
+        recipientId: undefined,
+        amount: -BigInt(ev.data[1]),
         totalFee: undefined,
         feeBalances: undefined,
         feeTreasury: undefined,
