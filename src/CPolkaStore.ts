@@ -215,7 +215,7 @@ export class CPolkaStore {
     const methodsToScan = [
       'utility.batch', 'utility.batch_all', 'utility.as_derivative',
       'proxy.proxy', 'multisig.asMulti',
-      'staking.payoutStakers', 'staking.bond', 'staking.bond_extra', 'staking.unbond',
+      'staking.payoutStakers', 'staking.bond', 'staking.bondExtra', 'staking.unbond',
       'balances.transfer', 'balances.transferKeepAlive',
       'identity.requestJudgement' // for ProcessMissingEvents
     ];
