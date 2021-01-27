@@ -19,6 +19,7 @@ import { ApiPromise } from '@polkadot/api';
 import { Metadata } from '@polkadot/metadata';
 import { Struct } from '@polkadot/types';
 import { GenericCall } from '@polkadot/types/generic';
+import { Codec, Registry } from '@polkadot/types/types';
 import {
   //	DispatchInfo,
   EraIndex,
@@ -27,7 +28,6 @@ import {
 } from '@polkadot/types/interfaces';
 import { BlockHash } from '@polkadot/types/interfaces/chain';
 import { u32 } from '@polkadot/types/primitive';
-import { Codec } from '@polkadot/types/types';
 import { u8aToHex } from '@polkadot/util';
 import { blake2AsU8a } from '@polkadot/util-crypto';
 import * as BN from 'bn.js';
@@ -96,13 +96,14 @@ export default class ApiHandler {
         args,
       } = extrinsic;
       const hash = u8aToHex(blake2AsU8a(extrinsic.toU8a(), 256));
+      const call = block.registry.createType('Call', method);
 
       return {
-        method: `${method.sectionName}.${method.methodName}`,
+        method: `${method.section}.${method.method}`,
         signature: isSigned ? { signature, signer } : null,
         nonce,
         args,
-        newArgs: this.parseGenericCall(method).args,
+        newArgs: this.parseGenericCall(call, block.registry).args,
         tip,
         hash,
         info: {},
@@ -644,20 +645,31 @@ export default class ApiHandler {
     }
   }
 
-  private parseArrayGenericCalls(
-    argsArray: Codec[]
-  ): (Codec | ISanitizedCall)[] {
+  /**
+   * Helper function for `parseGenericCall`.
+   *
+   * @param argsArray array of `Codec` values
+   * @param registry type registry of the block the call belongs to
+   */
+  private parseArrayGenericCalls(argsArray: Codec[], registry: Registry): (Codec | ISanitizedCall)[] {
     return argsArray.map((argument) => {
       if (argument instanceof GenericCall) {
-        return this.parseGenericCall(argument);
+        return this.parseGenericCall(argument, registry);
       }
 
       return argument;
     });
   }
 
-  private parseGenericCall(genericCall: GenericCall): ISanitizedCall {
-    const { sectionName, methodName, callIndex } = genericCall;
+  /**
+   * Recursively parse a `GenericCall` in order to label its arguments with
+   * their param names and give a human friendly method name (opposed to just a
+   * call index). Parses `GenericCall`s that are nested as arguments.
+   *
+   * @param genericCall `GenericCall`
+   * @param registry type registry of the block the call belongs to
+   */
+  private parseGenericCall(genericCall: GenericCall, registry: Registry): ISanitizedCall {
     const newArgs = {};
 
     // Pull out the struct of arguments to this call
@@ -670,9 +682,24 @@ export default class ApiHandler {
         const argument = callArgs.get(paramName);
 
         if (Array.isArray(argument)) {
-          newArgs[paramName] = this.parseArrayGenericCalls(argument);
+          newArgs[paramName] = this.parseArrayGenericCalls(argument, registry);
         } else if (argument instanceof GenericCall) {
-          newArgs[paramName] = this.parseGenericCall(argument);
+          newArgs[paramName] = this.parseGenericCall(argument, registry);
+        } else if (
+          paramName === 'call' &&
+          argument?.toRawType() === 'Bytes'
+        ) {
+          // multiSig.asMulti.args.call is an OpaqueCall (Vec<u8>) that we
+          // serialize to a polkadot-js Call and parse so it is not a hex blob.
+          try {
+            const call = registry.createType(
+              'Call',
+              argument.toHex()
+            );
+            newArgs[paramName] = this.parseGenericCall(call, registry);
+          } catch {
+            newArgs[paramName] = argument;
+          }
         } else {
           newArgs[paramName] = argument;
         }
@@ -680,8 +707,8 @@ export default class ApiHandler {
     }
 
     return {
-      method: `${sectionName}.${methodName}`,
-      callIndex,
+      method: `${genericCall.section}.${genericCall.method}`,
+      callIndex: genericCall.callIndex,
       args: newArgs,
     };
   }
