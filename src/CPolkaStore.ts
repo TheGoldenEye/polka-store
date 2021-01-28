@@ -420,19 +420,22 @@ export class CPolkaStore {
   // process staking.Bonded events
   private async ProcessStakingBondedEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number): Promise<void> {
     let method = ev.method;
+    let event_suffix = '';
 
     // check if reward destination is staked
     if (method == 'staking.Reward') {
       const rd = await data.api.query.staking.payee.at(data.block.hash, ev.data[0].toString());
-      if (rd.isStaked)
+      if (rd.isStaked) {
         method = 'staking.Bonded';  // create a Bonded event
+        event_suffix = '_1';        // id must be unique
+      }
     }
 
     if (method == 'staking.Bonded') {
 
       const tx: TTransaction = {
         chain: data.db.chain,
-        id: data.block.number + '-' + exIdx + '_ev' + evIdx,
+        id: data.block.number + '-' + exIdx + '_ev' + evIdx + event_suffix,
         height: data.blockNr,
         blockHash: data.block.hash.toString(),
         type: ex.method,
