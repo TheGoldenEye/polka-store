@@ -41,7 +41,7 @@ async function main() {
   process.on('exit', () => db().close());     // close database on exit
 
   const polkaStore = new CPolkaStore(chainData, chain);
-  await polkaStore.InitAPI();
+  const api = await polkaStore.InitAPI();
 
   console.log('##########################################');
   console.log('Chain:', chain);
@@ -55,6 +55,8 @@ async function main() {
   const atBlock = isNaN(+sBlock) ? lastBlock : Math.min(+sBlock, lastBlock);  // not behind lastBlock
   const date = db().queryFirstRow('SELECT datetime(timestamp/1000, \'unixepoch\', \'localtime\') as val FROM transactions WHERE height=?', atBlock)?.val;
   console.log('Balance data at Block: %d (%s)', atBlock, date ? date : '?');
+
+  const unit = api.registry.chainTokens[0];
 
   // iterate over all test accounts
   for (let i = 0, n = chainData.check_accounts.length; i < n; i++) {
@@ -71,23 +73,30 @@ async function main() {
     const received: bigint = db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE recipientId=? and height<=?', accountID, atBlock).val || BigInt(0);
     const total: bigint = feesReceived + received - feesPaid - paid;
     const totalD = Divide(total, plancks);
+    const bonded: bigint = db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE (event=\'staking.Bonded\' or event=\'staking.Unbonded\') and addData=? and height<=?', accountID, atBlock).val || BigInt(0);
+    const bondedD = Divide(bonded, plancks);
 
     // balance from API
-    const balance = await polkaStore.fetchBalance(atBlock, accountID);
-    const balanceTotal = BigInt(balance.reserved) + BigInt(balance.free);
-    const balanceTotalD = Divide(balanceTotal, plancks);
+    const balanceApi = await polkaStore.fetchBalance(atBlock, accountID);
+    const balanceApiTotal = BigInt(balanceApi.reserved) + BigInt(balanceApi.free);
+    const balanceApiTotalD = Divide(balanceApiTotal, plancks);
+    const bondedApi = BigInt(balanceApi.feeFrozen);
+    const bondedApiD = Divide(bondedApi, plancks);
+    const diffBalance = Divide(balanceApiTotal - total, plancks);
+    const diffBonded = Divide(bondedApi - bonded, plancks);
 
     console.log('------------------------------------------',);
-    console.log('Account:     %s (%s)', name, accountID);
-    console.log('Balance:     %d %s (calculated)', totalD, chainData.unit);
-    const diff = Divide(balanceTotal - total, plancks);
-    if (!diff) {
-      console.log(chalk.green('Balance ok'));
-    }
-    else {
-      console.log('Balance:     %d %s (from API)', balanceTotalD, chainData.unit);
-      console.log(chalk.red('Difference:  ' + diff + ' ' + chainData.unit));
-    }
+    console.log('Account: %s (%s)', name, accountID);
+
+    if (!diffBalance)
+      console.log(`Balance: ${totalD} ${unit}`);
+    else
+      console.log(chalk.red(`Balance: ${totalD} ${unit} (calculated) / ${balanceApiTotalD} ${unit} (from API) / Difference: ${diffBalance} ${unit}`));
+
+    if (!diffBonded)
+      console.log(`Bonded:  ${bondedD} ${unit}`);
+    else
+      console.log(chalk.red(`Bonded:  ${bondedD} ${unit} (calculated) / ${bondedApiD} ${unit} (from API) / Difference: ${diffBonded} ${unit}`));
   }
 }
 
