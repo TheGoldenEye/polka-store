@@ -1,4 +1,4 @@
-import { ApiPromise, WsProvider } from '@polkadot/api';
+import { ApiPromise } from '@polkadot/api';
 import { BlockHash, RuntimeVersion } from '@polkadot/types/interfaces';
 import { IBlock, IChainData, IExtrinsic, ISanitizedEvent, IOnInitializeOrFinalize, IAccountBalanceInfo } from './types';
 import ApiHandler from './ApiHandler';
@@ -40,28 +40,11 @@ export class CPolkaStore {
   // --------------------------------------------------------------
   async InitAPI(): Promise<ApiPromise> {
 
-    // Find suitable API provider
-    let selProvider = "";
+    this._apiHandler = new ApiHandler(this._chainData.providers); // Create API Handler
+    this._api = await this._apiHandler.connect();
 
-    for (let i = 0, n = this._chainData.providers.length; i < n && !this._api?.isConnected; i++) {
-      try {
-        selProvider = this._chainData.providers[i];
-        const provider = new WsProvider(selProvider, 1000);
-
-        // Create the API and check if ready
-        this._api = new ApiPromise({ provider });
-        await this._api.isReadyOrError;
-      }
-      catch (e) {
-        await this._api?.disconnect();
-      }
-    }
-    if (!this._api?.isConnected)
-      throw ('Cannot find suitable provider to connect');
-
-    this._api.on('error', (e) => {
-      console.error((e as Error).message);
-    });
+    if (!this._api)
+      process.exit(1);
 
     // Retrieve the chain & node information information via rpc calls
     const [chain, nodeName, nodeVersion] = await Promise.all([
@@ -75,7 +58,7 @@ export class CPolkaStore {
     console.log(`polka-store: v${ver}`);
     console.log(`Chain:       ${chain}`);
     console.log(`Node:        ${nodeName} v${nodeVersion}`);
-    console.log(`Provider:    ${selProvider}`);
+    console.log(`Provider:    ${this._apiHandler.currentEndpoint}`);
     console.log(`API:         ${this._api.libraryInfo}\n`);
 
     if (chain.toString() != this._chain) {
@@ -84,7 +67,6 @@ export class CPolkaStore {
       process.exit(1);
     }
 
-    this._apiHandler = new ApiHandler(this._api); // Create API Handler
     return this._api;
   }
 

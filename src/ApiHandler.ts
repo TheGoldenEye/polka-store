@@ -1,4 +1,4 @@
-import { ApiPromise } from '@polkadot/api';
+import { ApiPromise, WsProvider } from '@polkadot/api';
 import { Struct } from '@polkadot/types';
 import { GenericCall } from '@polkadot/types/generic';
 import { Codec, Registry } from '@polkadot/types/types';
@@ -9,22 +9,65 @@ import { blake2AsU8a } from '@polkadot/util-crypto';
 import { IAccountBalanceInfo, IBlock, ISanitizedCall, ISanitizedEvent } from './types';
 
 export default class ApiHandler {
+  private _endpoints: string[];
+  private _currentEndpoint: string;
+  private _api: ApiPromise;
 
-  constructor(private api: ApiPromise) {
+  // --------------------------------------------------------------
+  constructor(endpoints: string[]) {
+    this._endpoints = endpoints;
+    this._currentEndpoint = "";
   }
 
+  // --------------------------------------------------------------
+  get currentEndpoint(): string {
+    return this._currentEndpoint;
+  }
+
+  // --------------------------------------------------------------
+  async connect(): Promise<ApiPromise> {
+
+    if (this._api?.isConnected)
+      return this._api;
+
+    // Find suitable API provider
+    this._currentEndpoint = "";
+    for (let i = 0, n = this._endpoints.length; i < n && !this._api?.isConnected; i++) {
+      try {
+        this._currentEndpoint = this._endpoints[i];
+        const provider = new WsProvider(this._currentEndpoint, 1000);
+
+        // Create the API and check if ready
+        this._api = new ApiPromise({ provider });
+        await this._api.isReadyOrError;
+      }
+      catch (e) {
+        await this._api?.disconnect();
+      }
+    }
+
+    if (!this._api?.isConnected)
+      throw ('Cannot find suitable endpoint to connect');
+
+    this._api.on('error', (e) => {
+      console.error(e);
+    });
+
+    return this._api;
+  }
+
+  // --------------------------------------------------------------
   async fetchBlock(hash: BlockHash): Promise<IBlock> {
-    const { api } = this;
     const [{ block }, events] = await Promise.all([
-      api.rpc.chain.getBlock(hash),
-      api.query.system.events.at(hash),
+      this._api.rpc.chain.getBlock(hash),
+      this._api.query.system.events.at(hash),
     ]);
 
     const { parentHash, number, stateRoot, extrinsicsRoot } = block.header;
     const onInitialize = { events: [] as ISanitizedEvent[] };
     const onFinalize = { events: [] as ISanitizedEvent[] };
 
-    const header = await api.derive.chain.getHeader(hash);
+    const header = await this._api.derive.chain.getHeader(hash);
     const authorId = header?.author;
 
     const logs = block.header.digest.logs.map((log) => {
@@ -128,22 +171,18 @@ export default class ApiHandler {
     };
   }
 
-  async fetchBalance(
-    hash: BlockHash,
-    address: string
-  ): Promise<IAccountBalanceInfo> {
-    const { api } = this;
-
+  // --------------------------------------------------------------
+  async fetchBalance( hash: BlockHash, address: string ): Promise<IAccountBalanceInfo> {
     const [header, locks, sysAccount] = await Promise.all([
-      api.rpc.chain.getHeader(hash),
-      api.query.balances.locks.at(hash, address),
-      api.query.system.account.at(hash, address),
+      this._api.rpc.chain.getHeader(hash),
+      this._api.query.balances.locks.at(hash, address),
+      this._api.query.system.account.at(hash, address),
     ]);
 
     const account =
       sysAccount.data != null
         ? sysAccount.data
-        : await api.query.balances.account.at(hash, address);
+        : await this._api.query.balances.account.at(hash, address);
 
     const at = {
       hash,
@@ -171,12 +210,12 @@ export default class ApiHandler {
     }
   }
 
-  /**
-   * Helper function for `parseGenericCall`.
-   *
-   * @param argsArray array of `Codec` values
-   * @param registry type registry of the block the call belongs to
-   */
+  // --------------------------------------------------------------
+  // Helper function for `parseGenericCall`.
+  //
+  // @param argsArray array of `Codec` values
+  // @param registry type registry of the block the call belongs to
+
   private parseArrayGenericCalls(argsArray: Codec[], registry: Registry): (Codec | ISanitizedCall)[] {
     return argsArray.map((argument) => {
       if (argument instanceof GenericCall) {
@@ -187,14 +226,14 @@ export default class ApiHandler {
     });
   }
 
-  /**
-   * Recursively parse a `GenericCall` in order to label its arguments with
-   * their param names and give a human friendly method name (opposed to just a
-   * call index). Parses `GenericCall`s that are nested as arguments.
-   *
-   * @param genericCall `GenericCall`
-   * @param registry type registry of the block the call belongs to
-   */
+  // --------------------------------------------------------------
+  // Recursively parse a `GenericCall` in order to label its arguments with
+  // their param names and give a human friendly method name (opposed to just a
+  // call index). Parses `GenericCall`s that are nested as arguments.
+  //
+  // @param genericCall `GenericCall`
+  // @param registry type registry of the block the call belongs to
+  
   private parseGenericCall(genericCall: GenericCall, registry: Registry): ISanitizedCall {
     const newArgs = {};
 
