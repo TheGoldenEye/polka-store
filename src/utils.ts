@@ -17,7 +17,7 @@ export function GetTime(extrinsics: IExtrinsic[]): number {
   if (extrinsics[0].method != 'timestamp.set')
     return 0;
 
-  const d = new Date(Number(extrinsics[0].args[0]));
+  const d = new Date(Number(extrinsics[0].args.now));
   return d.getTime();
 }
 
