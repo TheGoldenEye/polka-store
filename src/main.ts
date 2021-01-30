@@ -11,6 +11,11 @@ async function main() {
     process.exit();
   });
 
+  process.on('unhandledRejection', (reason, promise) => {
+    console.log('Unhandled Rejection at:', promise, 'reason:', reason);
+    process.exit();
+  });
+
   const config = LoadConfigFile();
   if (!config)
     return;
