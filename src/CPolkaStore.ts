@@ -254,12 +254,12 @@ export class CPolkaStore {
       let subType: string | undefined = undefined;
       const method = ex.method;
       if (method == 'proxy.proxy' || method == 'utility.batch') {
-        if (ex.newArgs.call) {
-          subType = ex.newArgs.call.method;
+        if (ex.args.call) {
+          subType = ex.args.call.method;
         }
-        else if (ex.newArgs.calls) {
+        else if (ex.args.calls) {
           const arr: string[] = [];
-          ex.newArgs.calls.forEach(arg => {
+          ex.args.calls.forEach(arg => {
             if (!arr.includes(arg.method))
               arr.push(arg.method);
           });
