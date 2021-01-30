@@ -1,6 +1,6 @@
 import { ApiPromise, WsProvider } from '@polkadot/api';
 import { BlockHash, RuntimeVersion } from '@polkadot/types/interfaces';
-import { IBlock, IExtrinsic, ISanitizedEvent, IOnInitializeOrFinalize, IAccountBalanceInfo } from './types';
+import { IBlock, IChainData, IExtrinsic, ISanitizedEvent, IOnInitializeOrFinalize, IAccountBalanceInfo } from './types';
 import ApiHandler from './ApiHandler';
 import { CTxDB, TTransaction } from './CTxDB';
 import { CLogBlockNr } from "./CLogBlockNr";
@@ -10,8 +10,8 @@ import { GetTime } from './utils';
 export type TBlockData = {
   api: ApiPromise,
   handler: ApiHandler,
-  blockNr: number,
-  blockHash: BlockHash,
+  blockNr: number,        // used before fetching the block 
+  blockHash: BlockHash,   // used before fetching the block
   block: IBlock,
   db: CTxDB,
   txs: TTransaction[],
@@ -23,8 +23,7 @@ export type TBlockData = {
 
 export class CPolkaStore {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private _chainData: any;
-  private _providers: string[];
+  private _chainData: IChainData;
   private _chain: string;
   private _api: ApiPromise;
   private _apiHandler: ApiHandler;
@@ -32,9 +31,8 @@ export class CPolkaStore {
   private _errors: number;
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
-  constructor(chainData: any, chain: string) {
+  constructor(chainData: IChainData, chain: string) {
     this._chainData = chainData;
-    this._providers = chainData.providers;
     this._chain = chain;
     this._errors = 0;
   }
@@ -42,25 +40,23 @@ export class CPolkaStore {
   // --------------------------------------------------------------
   async InitAPI(): Promise<ApiPromise> {
 
-    const ver = getPackageVersion();
-
     // Find suitable API provider
     let selProvider = "";
 
-    for (let i = 0, n = this._providers.length; i < n && !this._api?.isConnected; i++) {
+    for (let i = 0, n = this._chainData.providers.length; i < n && !this._api?.isConnected; i++) {
       try {
-        selProvider = this._providers[i];
-        const provider = new WsProvider(selProvider);
+        selProvider = this._chainData.providers[i];
+        const provider = new WsProvider(selProvider, 1000);
 
         // Create the API and check if ready
         this._api = new ApiPromise({ provider });
         await this._api.isReadyOrError;
       }
       catch (e) {
-        this._api?.disconnect();
+        await this._api?.disconnect();
       }
     }
-    if (!this._api)
+    if (!this._api?.isConnected)
       throw ('Cannot find suitable provider to connect');
 
     this._api.on('error', (e) => {
@@ -73,6 +69,8 @@ export class CPolkaStore {
       this._api.rpc.system.name(),
       this._api.rpc.system.version()
     ]);
+
+    const ver = getPackageVersion();
 
     console.log(`polka-store: v${ver}`);
     console.log(`Chain:       ${chain}`);
