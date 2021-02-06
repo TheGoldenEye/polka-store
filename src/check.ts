@@ -80,7 +80,8 @@ async function main() {
     const balanceApi = await polkaStore.fetchBalance(atBlock, accountID);
     const balanceApiTotal = BigInt(balanceApi.reserved) + BigInt(balanceApi.free);
     const balanceApiTotalD = Divide(balanceApiTotal, plancks);
-    const bondedApi = BigInt(balanceApi.feeFrozen);
+    const si = await polkaStore.fetchStakingInfo(atBlock, accountID);
+    const bondedApi = si ? si.staking.active.toBigInt() : BigInt(0);
     const bondedApiD = Divide(bondedApi, plancks);
     const diffBalance = Divide(balanceApiTotal - total, plancks);
     const diffBonded = Divide(bondedApi - bonded, plancks);

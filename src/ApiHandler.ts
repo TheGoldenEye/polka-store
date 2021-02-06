@@ -6,7 +6,7 @@ import { BlockHash } from '@polkadot/types/interfaces/chain';
 import { u8aToHex } from '@polkadot/util';
 import { blake2AsU8a } from '@polkadot/util-crypto';
 
-import { IAccountBalanceInfo, IBlock, ISanitizedCall, ISanitizedEvent } from './types';
+import { IAccountBalanceInfo, IAccountStakingInfo, IBlock, ISanitizedCall, ISanitizedEvent } from './types';
 
 export default class ApiHandler {
   private _endpoints: string[];
@@ -172,7 +172,7 @@ export default class ApiHandler {
   }
 
   // --------------------------------------------------------------
-  async fetchBalance( hash: BlockHash, address: string ): Promise<IAccountBalanceInfo> {
+  async fetchBalance(hash: BlockHash, address: string): Promise<IAccountBalanceInfo> {
     const [header, locks, sysAccount] = await Promise.all([
       this._api.rpc.chain.getHeader(hash),
       this._api.query.balances.locks.at(hash, address),
@@ -210,6 +210,58 @@ export default class ApiHandler {
     }
   }
 
+  // Fetch staking information for a Stash account at a given block.
+  // @param hash `BlockHash` to make call at
+  // @param stash address of the Stash account to get the staking info of
+  // returns null, if stash is not a Stash account
+  async fetchStakingInfo(hash: BlockHash, stash: string): Promise<IAccountStakingInfo | null> {
+    const [header, controllerOption] = await Promise.all([
+      this._api.rpc.chain.getHeader(hash),
+      this._api.query.staking.bonded.at(hash, stash),
+    ]);
+
+    const at = {
+      hash,
+      height: header.number.unwrap().toString(10),
+    };
+
+    if (controllerOption.isNone) {
+      return null;
+      //throw new Error(`The address ${stash} is not a stash address.`);
+    }
+
+    const controller = controllerOption.unwrap();
+
+    const [
+      stakingLedgerOption,
+      rewardDestination,
+      slashingSpansOption,
+    ] = await Promise.all([
+      this._api.query.staking.ledger.at(hash, controller),
+      this._api.query.staking.payee.at(hash, stash),
+      this._api.query.staking.slashingSpans.at(hash, stash),
+    ]);
+
+    const stakingLedger = stakingLedgerOption.unwrapOr(null);
+
+    if (stakingLedger === null) {
+      // should never throw because by time we get here we know we have a bonded pair
+      throw new Error(`Staking ledger could not be found for controller address "${controller.toString()}"`);
+    }
+
+    const numSlashingSpans = slashingSpansOption.isSome
+      ? slashingSpansOption.unwrap().prior.length + 1
+      : 0;
+
+    return {
+      at,
+      controller,
+      rewardDestination,
+      numSlashingSpans,
+      staking: stakingLedger,
+    };
+  }
+
   // --------------------------------------------------------------
   // Helper function for `parseGenericCall`.
   //
@@ -233,7 +285,7 @@ export default class ApiHandler {
   //
   // @param genericCall `GenericCall`
   // @param registry type registry of the block the call belongs to
-  
+
   private parseGenericCall(genericCall: GenericCall, registry: Registry): ISanitizedCall {
     const newArgs = {};
 

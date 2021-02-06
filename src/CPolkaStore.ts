@@ -1,6 +1,6 @@
 import { ApiPromise } from '@polkadot/api';
 import { BlockHash, RuntimeVersion } from '@polkadot/types/interfaces';
-import { IBlock, IChainData, IExtrinsic, ISanitizedEvent, IOnInitializeOrFinalize, IAccountBalanceInfo } from './types';
+import { IBlock, IChainData, IExtrinsic, ISanitizedEvent, IOnInitializeOrFinalize, IAccountBalanceInfo, IAccountStakingInfo } from './types';
 import ApiHandler from './ApiHandler';
 import { CTxDB, TTransaction } from './CTxDB';
 import { CLogBlockNr } from "./CLogBlockNr";
@@ -103,6 +103,17 @@ export class CPolkaStore {
   // --------------------------------------------------------------
   async fetchBalanceH(blockHash: BlockHash, address: string): Promise<IAccountBalanceInfo> {
     return await this._apiHandler.fetchBalance(blockHash, address);
+  }
+
+  // --------------------------------------------------------------
+  async fetchStakingInfo(blockNr: number, address: string): Promise<IAccountStakingInfo | null> {
+    const hash = await this._api.rpc.chain.getBlockHash(blockNr);
+    return await this.fetchStakingInfoH(hash, address);
+  }
+
+  // --------------------------------------------------------------
+  async fetchStakingInfoH(blockHash: BlockHash, address: string): Promise<IAccountStakingInfo | null> {
+    return await this._apiHandler.fetchStakingInfo(blockHash, address);
   }
 
   // --------------------------------------------------------------
