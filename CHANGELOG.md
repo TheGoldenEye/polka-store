@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 1.4.0 Jan 11, 2021
+
+Changes:
+
+- updated dependency: @polkadot/api v3.7.3
+- support for bonding/unbonding events
+
 ## 1.3.0 Dec 21, 2020
 
 Changes:
