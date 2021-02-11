@@ -17,6 +17,9 @@ What is balance-relevant? Currently the following data will be collected:
 - staking rewards
 - staking slashes
 
+Additionally to the balance-relevant transaction data,
+also changes in bonded amounts are stored.
+
 Btw, you can download regularly updated example databases from my file storage linked below.
 
 ## 2 Installation
@@ -176,9 +179,9 @@ Available example databases:
 
 |  Database   | Last Block |     Date     |   Download   |
 |:------------|:-----------|:-------------|:-------------|
-| Polkadot.db | 2997477    | Dec 21, 2020 | [Polkadot.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)  |
-| Kusama.db   | 5433278    | Dec 21, 2020 | [Kusama.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)    |
-| Westend.db  | 3608950    | Dec 21, 2020 | [Westend.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)   |
+| Polkadot.db | 3744547    | Feb 11, 2021 | [Polkadot.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)  |
+| Kusama.db   | 6166880    | Feb 11, 2021 | [Kusama.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)    |
+| Westend.db  | 4344097    | Feb 11, 2021 | [Westend.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)   |
 
 ## 4 Running
 
