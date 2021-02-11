@@ -195,6 +195,32 @@ export class CPolkaStore {
         };
 
         data.txs.push(tx);
+
+        // emulate a staking.Unbonded event
+        const tx1: TTransaction = {
+          chain: tx.chain,
+          id: tx.id + '_1',
+          height: tx.height,
+          blockHash: tx.blockHash,
+          type: tx.type,
+          subType: undefined,
+          event: 'staking.Unbonded',
+          addData: tx.senderId, // AcountID of validator,
+          timestamp: tx.timestamp,
+          specVersion: undefined,
+          transactionVersion: undefined,
+          authorId: undefined,
+          senderId: undefined,
+          recipientId: undefined,
+          amount: -BigInt(ev.data[1]),
+          totalFee: undefined,
+          feeBalances: undefined,
+          feeTreasury: undefined,
+          tip: undefined,
+          success: undefined
+        };
+
+        data.txs.push(tx1);
       }
     });
   }
