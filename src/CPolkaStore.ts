@@ -233,7 +233,7 @@ export class CPolkaStore {
       'utility.batch', 'utility.batch_all', 'utility.as_derivative',
       'proxy.proxy', 'multisig.asMulti',
       'staking.payoutStakers', 'staking.bond', 'staking.bondExtra', 'staking.unbond',
-      'balances.transfer', 'balances.transferKeepAlive',
+      'balances.transfer', 'balances.forceTransfer', 'balances.transferKeepAlive', 'vesting.vestedTransfer', 'vesting.forceVestedTransfer',
       'identity.requestJudgement' // for ProcessMissingEvents
     ];
 
