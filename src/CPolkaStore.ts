@@ -228,29 +228,29 @@ export class CPolkaStore {
   // --------------------------------------------------------------
   // process general extrinsics
   private async ProcessExtrinsics(data: TBlockData): Promise<void> {
-
-    const methodsToScan = [
-      'utility.batch', 'utility.batch_all', 'utility.as_derivative',
-      'proxy.proxy', 'multisig.asMulti',
-      'staking.payoutStakers', 'staking.bond', 'staking.bondExtra', 'staking.unbond',
-      'balances.transfer', 'balances.forceTransfer', 'balances.transferKeepAlive', 'vesting.vestedTransfer', 'vesting.forceVestedTransfer',
-      'identity.requestJudgement' // for ProcessMissingEvents
-    ];
-
+    /*
+        const methodsToScan = [
+          'utility.batch', 'utility.batch_all', 'utility.as_derivative',
+          'proxy.proxy', 'multisig.asMulti',
+          'staking.payoutStakers', 'staking.bond', 'staking.bondExtra', 'staking.unbond',
+          'balances.transfer', 'balances.forceTransfer', 'balances.transferKeepAlive', 'vesting.vestedTransfer', 'vesting.forceVestedTransfer',
+          'identity.requestJudgement' // for ProcessMissingEvents
+        ];
+    */
     const ver = await data.api.rpc.state.getRuntimeVersion(data.block.parentHash); // get runtime version of the block
 
     for (let exIdx = 0, n = data.block.extrinsics.length; exIdx < n; exIdx++) {
       const ex = data.block.extrinsics[exIdx];
-      const method = ex.method;
+      //const method = ex.method;
 
       // 1. process all signed transactions (stores the fee / tip)
       await this.ProcessGeneral(data, ex, exIdx, ver);
 
       // 2. process events attached to extrinsics
-      if (methodsToScan.includes(method))
-        await Promise.all(ex.events.map(async (ev: ISanitizedEvent, evIdx: number) => {
-          await this.ProcessEvents(data, ex, exIdx, ev, evIdx, ver.specVersion.toNumber());
-        }));
+      //if (methodsToScan.includes(method))
+      await Promise.all(ex.events.map(async (ev: ISanitizedEvent, evIdx: number) => {
+        await this.ProcessEvents(data, ex, exIdx, ev, evIdx, ver.specVersion.toNumber());
+      }));
 
       // sequential:
       /*
