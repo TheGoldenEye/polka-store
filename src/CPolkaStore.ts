@@ -396,7 +396,10 @@ export class CPolkaStore {
   private async ProcessStakingRewardEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number): Promise<void> {
     if (ev.method == 'staking.Reward') {
 
-      const stashId = ev.data[0].toString(); // AcountID of validator
+      const stashId = ev.data[0].toString();  // AcountID of validator
+      if (!stashId || stashId == '0')         // invalid stashId
+        return;
+
       let payee = stashId; // init payee
 
       // get reward destination from api
@@ -441,7 +444,11 @@ export class CPolkaStore {
 
     // check if reward destination is staked
     if (method == 'staking.Reward') {
-      const rd = await data.api.query.staking.payee.at(data.block.hash, ev.data[0].toString());
+      const stashId = ev.data[0].toString();  // AcountID of validator
+      if (!stashId || stashId == '0')         // invalid stashId
+        return;
+
+      const rd = await data.api.query.staking.payee.at(data.block.hash, stashId);
       if (rd.isStaked) {
         method = 'staking.Bonded';  // create a Bonded event
         event_suffix = '_1';        // id must be unique
