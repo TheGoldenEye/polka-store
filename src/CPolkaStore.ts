@@ -397,7 +397,7 @@ export class CPolkaStore {
     if (ev.method == 'staking.Reward') {
 
       const stashId = ev.data[0].toString();  // AcountID of validator
-      if (!stashId || stashId == '0')         // invalid stashId
+      if (!this.IsValidAccountID(stashId))    // invalid stashId
         return;
 
       let payee = stashId; // init payee
@@ -445,7 +445,7 @@ export class CPolkaStore {
     // check if reward destination is staked
     if (method == 'staking.Reward') {
       const stashId = ev.data[0].toString();  // AcountID of validator
-      if (!stashId || stashId == '0')         // invalid stashId
+      if (!this.IsValidAccountID(stashId))    // invalid stashId
         return;
 
       const rd = await data.api.query.staking.payee.at(data.block.hash, stashId);
@@ -616,4 +616,9 @@ export class CPolkaStore {
     return !ex.paysFee || (tx.totalFee != undefined);
   }
 
+  // --------------------------------------------------------------
+  // checks, if accountId is valid
+  private IsValidAccountID(accountId: string): boolean {
+    return accountId.length == 47;
+  }
 }
