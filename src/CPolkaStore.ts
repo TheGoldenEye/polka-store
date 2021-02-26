@@ -144,7 +144,7 @@ export class CPolkaStore {
     }
     catch (e) {
       this._errors++;
-      this.ErrorOut(blockNr, (e as Error).message, true);
+      this.ErrorOutB(blockNr, (e as Error).message, true);
     }
   }
 
@@ -396,8 +396,8 @@ export class CPolkaStore {
   private async ProcessStakingRewardEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number): Promise<void> {
     if (ev.method == 'staking.Reward') {
 
-      const stashId = ev.data[0].toString();                // AcountID of validator
-      if (!this.IsValidAccountID(data.blockNr, stashId))    // invalid stashId
+      const stashId = ev.data[0].toString();                      // AcountID of validator
+      if (!this.IsValidAccountID(data.blockNr, exIdx, stashId))   // invalid stashId
         return;
 
       let payee = stashId; // init payee
@@ -444,8 +444,8 @@ export class CPolkaStore {
 
     // check if reward destination is staked
     if (method == 'staking.Reward') {
-      const stashId = ev.data[0].toString();                // AcountID of validator
-      if (!this.IsValidAccountID(data.blockNr, stashId))    // invalid stashId
+      const stashId = ev.data[0].toString();                      // AcountID of validator
+      if (!this.IsValidAccountID(data.blockNr, exIdx, stashId))   // invalid stashId
         return;
 
       const rd = await data.api.query.staking.payee.at(data.block.hash, stashId);
@@ -618,17 +618,23 @@ export class CPolkaStore {
 
   // --------------------------------------------------------------
   // checks, if accountId is valid
-  private IsValidAccountID(blockNr: number, accountId: string): boolean {
+  private IsValidAccountID(blockNr: number, exIdx: number, accountId: string): boolean {
     const len = accountId.length;
     const ok = (len >= 46 && len <= 48);    // account length: kusama:47, polkadot:46-48, westend:48
     if (!ok)
-      this.ErrorOut(blockNr, 'Invalid accountId: ' + accountId + '(length:' + accountId.length + ')', false);
+      this.ErrorOutEx(blockNr + '-' + exIdx, 'Invalid accountId: ' + accountId + ' (length:' + accountId.length + ')', false);
     return ok;
   }
 
   // --------------------------------------------------------------
-  // write Error to stderr
-  private ErrorOut(blockNr: number, msg: string, separator: boolean): void {
+  // write Error (Block) to stderr
+  private ErrorOutB(blockNr: number, msg: string, separator: boolean): void {
     console.error('BlockNr: %d Error: %s%s', blockNr, msg, separator ? '\n------------------------------' : '');
+  }
+
+  // --------------------------------------------------------------
+  // write Error (Extrinsic) to stderr
+  private ErrorOutEx(extrinsicId: string, msg: string, separator: boolean): void {
+    console.error('Extrinsic: %s Error: %s%s', extrinsicId, msg, separator ? '\n------------------------------' : '');
   }
 }
