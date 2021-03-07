@@ -22,7 +22,7 @@
     "@polkadot/api": "^3.0.1",
     "@types/better-sqlite3": "^5.4.0",
     "@types/sprintf-js": "^1.1.2",
-    "ajv": "^7.0.2",
+    "ajv": "=7.1.1",
     "better-sqlite3-helper": "^3.1.0",
     "bn": "^1.0.5",
     "chalk": "^4.1.0",
