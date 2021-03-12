@@ -1,5 +1,5 @@
 // Required imports
-import { IExtrinsic } from './types';
+import { IExtrinsic, INodeVersion } from './types';
 import Ajv from "ajv";
 import * as fs from 'fs';
 import * as chalk from 'chalk';
@@ -60,3 +60,17 @@ export function LoadConfigFile(): any {
   return ValidateConfigFile(config, './schema/config.schema.json');
 }
 
+export function GetNodeVersion(): INodeVersion {
+  const version = process.versions.node;
+
+  const split = version.split('.');
+
+  return {
+    original: 'v' + version,
+    short: split[0] + '.' + split[1],
+    long: version,
+    major: Number(split[0]),
+    minor: Number(split[1]),
+    build: Number(split[2])
+  };
+}

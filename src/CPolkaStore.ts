@@ -5,7 +5,7 @@ import ApiHandler from './ApiHandler';
 import { CTxDB, TTransaction } from './CTxDB';
 import { CLogBlockNr } from "./CLogBlockNr";
 import * as getPackageVersion from '@jsbits/get-package-version';
-import { GetTime } from './utils';
+import { GetTime, GetNodeVersion } from './utils';
 
 export type TBlockData = {
   api: ApiPromise,
@@ -54,12 +54,14 @@ export class CPolkaStore {
     ]);
 
     const ver = getPackageVersion();
+    const nodeVer = GetNodeVersion();
 
-    console.log(`polka-store: v${ver}`);
-    console.log(`Chain:       ${chain}`);
-    console.log(`Node:        ${nodeName} v${nodeVersion}`);
-    console.log(`Provider:    ${this._apiHandler.currentEndpoint}`);
-    console.log(`API:         ${this._api.libraryInfo}\n`);
+    console.log(`polka-store:  v${ver}`);
+    console.log(`Chain:        ${chain}`);
+    console.log(`Node:         ${nodeName} v${nodeVersion}`);
+    console.log(`Provider:     ${this._apiHandler.currentEndpoint}`);
+    console.log(`API:          ${this._api.libraryInfo}`);
+    console.log(`Node version: ${nodeVer.original}\n`);
 
     if (chain.toString() != this._chain) {
       console.log('Wrong chain!\nGot "%s" chain, but expected "%s" chain.', chain.toString(), this._chain);

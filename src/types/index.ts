@@ -4,6 +4,7 @@ export * from './At';
 export * from './Block';
 export * from './ChainData';
 export * from './Extrinsic';
+export * from './NodeVersion';
 export * from './SanitizedArgs';
 export * from './SanitizedCall';
 export * from './SanitizedEvent';
