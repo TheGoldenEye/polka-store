@@ -56,12 +56,12 @@ export class CPolkaStore {
     const ver = getPackageVersion();
     const nodeVer = GetNodeVersion();
 
-    console.log(`polka-store:  v${ver}`);
-    console.log(`Chain:        ${chain}`);
-    console.log(`Node:         ${nodeName} v${nodeVersion}`);
-    console.log(`Provider:     ${this._apiHandler.currentEndpoint}`);
-    console.log(`API:          ${this._api.libraryInfo}`);
-    console.log(`Node version: ${nodeVer.original}\n`);
+    console.log(`polka-store:     v${ver}`);
+    console.log(`Chain:           ${chain}`);
+    console.log(`Node:            ${nodeName} v${nodeVersion}`);
+    console.log(`Node.js version: ${nodeVer.original}`);
+    console.log(`Provider:        ${this._apiHandler.currentEndpoint}`);
+    console.log(`API:             ${this._api.libraryInfo}\n`);
 
     if (chain.toString() != this._chain) {
       console.log('Wrong chain!\nGot "%s" chain, but expected "%s" chain.', chain.toString(), this._chain);
