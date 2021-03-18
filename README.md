@@ -108,8 +108,9 @@ config.json:
     "Polkadot": {
       "providers": [
         "ws://127.0.0.1:9944",
-        "wss://rpc.polkadot.io",
-        "wss://cc1-1.polkadot.network"
+        "wss://polkadot.elara.patract.io",
+        "wss://polkadot.api.onfinality.io/public-ws",
+        "wss://rpc.polkadot.io"
       ],
       "startBlock": 892,
       "unit": "DOT",
@@ -122,12 +123,9 @@ config.json:
     "Kusama": {
       "providers": [
         "ws://127.0.0.1:9944",
-        "wss://cc3-3.kusama.network",
-        "wss://kusama-rpc.polkadot.io",
-        "wss://cc3-1.kusama.network",
-        "wss://cc3-2.kusama.network",
-        "wss://cc3-4.kusama.network",
-        "wss://cc3-5.kusama.network"
+        "wss://kusama.elara.patract.io",
+        "wss://kusama.api.onfinality.io/public-ws",
+        "wss://kusama-rpc.polkadot.io"
       ],
       "startBlock": 3876,
       "unit": "KSM",
@@ -180,9 +178,9 @@ Available example databases:
 
 |  Database   | Last Block |     Date     |   Download   |
 |:------------|:-----------|:-------------|:-------------|
-| Polkadot.db | 3744547    | Feb 11, 2021 | [Polkadot.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)  |
-| Kusama.db   | 6166880    | Feb 11, 2021 | [Kusama.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)    |
-| Westend.db  | 4344097    | Feb 11, 2021 | [Westend.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)   |
+| Polkadot.db | 4170349    | Mar 13, 2021 | [Polkadot.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)  |
+| Kusama.db   | 6589039    | Mar 13, 2021 | [Kusama.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)    |
+| Westend.db  | 4757288    | Mar 13, 2021 | [Westend.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)   |
 
 ## 4 Running
 
