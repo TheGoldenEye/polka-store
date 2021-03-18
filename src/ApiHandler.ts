@@ -37,6 +37,8 @@ export default class ApiHandler {
         this._currentEndpoint = this._endpoints[i];
         const provider = new WsProvider(this._currentEndpoint, 1000);
 
+        console.log('Connecting ', this._currentEndpoint, ' ...');
+
         // Create the API and check if ready
         this._api = new ApiPromise({ provider });
         await this._api.isReadyOrError;

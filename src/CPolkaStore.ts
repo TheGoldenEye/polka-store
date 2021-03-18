@@ -56,6 +56,7 @@ export class CPolkaStore {
     const ver = getPackageVersion();
     const nodeVer = GetNodeVersion();
 
+    console.log();
     console.log(`polka-store: v${ver}`);
     console.log(`Chain:       ${chain}`);
     console.log(`Node:        ${nodeName} v${nodeVersion}`);
