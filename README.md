@@ -52,8 +52,9 @@ Now its time to check the nodejs version:
 node -v
 ```
 
-If your node version is minimum v10.4.0, its fine. Otherwise you have to install
-a newer version, because of the missing BigInt support in Node.js prior to v10.4.  
+If your node version is minimum v12.x, its fine. Otherwise you have to install
+a newer version, because of the missing BigInt support in Node.js prior to v10.4
+and due to the end of maintenance for version 10.x end of April 2021.  
 You can do it with the 'n node installer':
 
 ``` bash
