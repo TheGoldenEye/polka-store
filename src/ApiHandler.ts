@@ -44,7 +44,8 @@ export default class ApiHandler {
         await this._api.isReadyOrError;
       }
       catch (e) {
-        await this._api?.disconnect();
+        if (this._api?.isConnected)
+          await this._api?.disconnect();
       }
     }
 
