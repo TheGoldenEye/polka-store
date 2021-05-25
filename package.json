@@ -36,6 +36,6 @@
     "@typescript-eslint/parser": "^3.7.1",
     "eslint": "^7.5.0",
     "tsc-watch": "^4.2.9",
-    "typescript": "^3.9.7"
+    "typescript": "^4.2.4"
   }
 }
