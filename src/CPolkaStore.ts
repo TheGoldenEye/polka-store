@@ -189,7 +189,7 @@ export class CPolkaStore {
           authorId: data.block.authorId?.toString(),
           senderId: ev.data[0].toString(),
           recipientId: undefined,
-          amount: BigInt(ev.data[1]),
+          amount: BigInt(ev.data[1].toString()),
           totalFee: undefined,
           feeBalances: undefined,
           feeTreasury: undefined,
@@ -215,7 +215,7 @@ export class CPolkaStore {
           authorId: undefined,
           senderId: undefined,
           recipientId: undefined,
-          amount: -BigInt(ev.data[1]),
+          amount: -BigInt(ev.data[1].toString()),
           totalFee: undefined,
           feeBalances: undefined,
           feeTreasury: undefined,
@@ -306,7 +306,7 @@ export class CPolkaStore {
         totalFee: undefined,
         feeBalances: undefined,
         feeTreasury: undefined,
-        tip: BigInt(ex.tip),
+        tip: ex.tip?.toBigInt(),
         success: ex.success ? 1 : 0
       };
 
@@ -350,7 +350,7 @@ export class CPolkaStore {
         authorId: undefined,
         senderId: ev.data[0].toString(),
         recipientId: ev.data[1].toString(),
-        amount: BigInt(ev.data[2]),
+        amount: BigInt(ev.data[2].toString()),
         totalFee: undefined,
         feeBalances: undefined,
         feeTreasury: undefined,
@@ -382,7 +382,7 @@ export class CPolkaStore {
         authorId: undefined,
         senderId: ev.data[0].toString(),
         recipientId: undefined,
-        amount: BigInt(ev.data[1]),
+        amount: BigInt(ev.data[1].toString()),
         totalFee: undefined,
         feeBalances: undefined,
         feeTreasury: undefined,
@@ -427,7 +427,7 @@ export class CPolkaStore {
         authorId: undefined,
         senderId: undefined,
         recipientId: payee,
-        amount: BigInt(ev.data[1]),
+        amount: BigInt(ev.data[1].toString()),
         totalFee: undefined,
         feeBalances: undefined,
         feeTreasury: undefined,
@@ -475,7 +475,7 @@ export class CPolkaStore {
         authorId: undefined,
         senderId: undefined,
         recipientId: undefined,
-        amount: BigInt(ev.data[1]),
+        amount: BigInt(ev.data[1].toString()),
         totalFee: undefined,
         feeBalances: undefined,
         feeTreasury: undefined,
@@ -507,7 +507,7 @@ export class CPolkaStore {
         authorId: undefined,
         senderId: undefined,
         recipientId: undefined,
-        amount: -BigInt(ev.data[1]),
+        amount: -BigInt(ev.data[1].toString()),
         totalFee: undefined,
         feeBalances: undefined,
         feeTreasury: undefined,
@@ -539,7 +539,7 @@ export class CPolkaStore {
         authorId: undefined,
         senderId: ev.data[0].toString(),
         recipientId: ev.data[1].toString(),
-        amount: BigInt(ev.data[2]),
+        amount: BigInt(ev.data[2].toString()),
         totalFee: undefined,
         feeBalances: undefined,
         feeTreasury: undefined,
@@ -607,10 +607,10 @@ export class CPolkaStore {
     if (ex.paysFee)
       ex.events.forEach((ev: ISanitizedEvent) => {
         if (ev.method == 'balances.Deposit') {
-          tx.feeBalances = BigInt(ev.data[1]);
+          tx.feeBalances = BigInt(ev.data[1].toString());
         }
         else if (ev.method == 'treasury.Deposit') {
-          tx.feeTreasury = BigInt(ev.data[0]);
+          tx.feeTreasury = BigInt(ev.data[0].toString());
         }
       });
 

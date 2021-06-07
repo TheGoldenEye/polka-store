@@ -78,7 +78,7 @@ async function main() {
 
     // balance from API
     const balanceApi = await polkaStore.fetchBalance(atBlock, accountID);
-    const balanceApiTotal = BigInt(balanceApi.reserved) + BigInt(balanceApi.free);
+    const balanceApiTotal = BigInt(balanceApi.reserved.toString()) + BigInt(balanceApi.free.toString());
     const balanceApiTotalD = Divide(balanceApiTotal, plancks);
     const si = await polkaStore.fetchStakingInfo(atBlock, accountID);
     const bondedApi = si ? si.staking.active.toBigInt() : BigInt(0);
