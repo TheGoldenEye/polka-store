@@ -1,5 +1,5 @@
 import { ApiPromise } from '@polkadot/api';
-import { BlockHash, RuntimeVersion } from '@polkadot/types/interfaces';
+import { BlockHash, RuntimeVersion, MultiLocation, MultiAsset } from '@polkadot/types/interfaces';
 import { IBlock, IChainData, IExtrinsic, ISanitizedEvent, IOnInitializeOrFinalize, IAccountBalanceInfo, IAccountStakingInfo } from './types';
 import ApiHandler from './ApiHandler';
 import { CTxDB, TTransaction } from './CTxDB';
@@ -554,8 +554,84 @@ export class CPolkaStore {
   // --------------------------------------------------------------
   // process missing events in older runtimes
   private async ProcessMissingEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number, specVer: number): Promise<void> {
+    await Promise.all([
+      this.ProcessMissingReserveRepatriated(data, ex, exIdx, ev, evIdx, specVer),
+      this.ProcessMissingParachainTransfer(data, ex, exIdx, ev, evIdx, specVer)
+    ]);
+  }
 
-    // balances.Reserved/balances.Unreserved/balances.ReserveRepatriated are new from kusama v2008 / polkadot v8
+  // --------------------------------------------------------------
+  // process missing events for inter chain transfers
+  private async ProcessMissingParachainTransfer(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number, specVer: number): Promise<void> {
+
+    if (!ex.signature ||  // we need a signer as sender
+      evIdx ||            // only once per extrinsic
+      ex.method != 'xcmPallet.reserveTransferAssets' && ex.method != 'xcmPallet.teleportAssets')
+      return;
+
+    const dest = ex.args.dest as MultiLocation;
+    const beneficiary = ex.args.beneficiary as MultiLocation;
+    const assets = ex.args.assets as MultiAsset[];
+    if (!dest.isX1)
+      throw 'dest wrong Type';
+    if (!beneficiary.isX1)
+      throw 'beneficiary wrong Type';
+
+    const destX1 = dest.asX1;
+    const beneficiaryX1 = beneficiary.asX1;
+
+    if (!destX1.isParachain)
+      throw 'destX1 wrong Type';
+    if (!beneficiaryX1.isAccountId32)
+      throw 'beneficiaryX1 wrong Type';
+
+    const parachain = destX1.asParachain.toString();
+    const net = beneficiaryX1.asAccountId32.network.toString();
+    const account = beneficiaryX1.asAccountId32.id.toString();
+
+    for (let i = 0; i < assets.length; i++) {
+      if (!assets[i].isConcreteFungible) {
+        throw 'assets[' + i + '] wrong Type';
+        //continue;
+      }
+      const a = assets[i].asConcreteFungible;
+      if (!a.id.isNull)
+        throw 'MultiAssetConcreteFungible wrong Type';
+
+      const tx: TTransaction = {
+        chain: data.db.chain,
+        id: data.block.number + '-' + exIdx + '_ev' + evIdx + '_2',
+        height: data.blockNr,
+        blockHash: data.block.hash.toString(),
+        type: ex.method,
+        subType: undefined,
+        event: 'balances.TransferParachain',    // 'synthetic event', not really existing
+        addData: undefined,
+        timestamp: GetTime(data.block.extrinsics),
+        specVersion: undefined,
+        transactionVersion: undefined,
+        authorId: undefined,
+        senderId: ex.signature.signer.toString(),
+        recipientId: 'P' + parachain + ' ' + net + ':' + account,
+        amount: a.amount.toBigInt(),
+        totalFee: undefined,
+        feeBalances: undefined,
+        feeTreasury: undefined,
+        tip: undefined,
+        success: undefined
+      };
+
+      data.txs.push(tx);
+
+    }
+
+  }
+
+  // --------------------------------------------------------------
+  // process missing balances.ReserveRepatriated event
+  private async ProcessMissingReserveRepatriated(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number, specVer: number): Promise<void> {
+
+    // balances.Reserved/balances.Unreserved/balances.ReserveRepatriated are new from kusama v2008 / polkadot v13
     // for older runtimes we try to emulate the transfer
     const verReserve = {
       'Kusama': 2008,
