@@ -577,8 +577,9 @@ export class CPolkaStore {
     const assets = ex.args.assets as MultiAsset[];
     if (!dest.isX1)
       return;
+
     if (!beneficiary.isX1)
-      throw 'beneficiary wrong Type';
+      return;
 
     const destX1 = dest.asX1;
     const beneficiaryX1 = beneficiary.asX1;
