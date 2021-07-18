@@ -1,6 +1,6 @@
 import { ApiPromise } from '@polkadot/api';
 import { Compact, Option } from '@polkadot/types';
-import { BlockHash, RuntimeVersion, MultiLocation, MultiAsset, StakingLedger, BalanceOf } from '@polkadot/types/interfaces';
+import { BlockHash, RuntimeVersion, MultiLocation, MultiAsset, StakingLedger, BalanceOf, AccountId } from '@polkadot/types/interfaces';
 import { IBlock, IChainData, IExtrinsic, ISanitizedEvent, IOnInitializeOrFinalize, IAccountBalanceInfo, IAccountStakingInfo } from './types';
 import ApiHandler from './ApiHandler';
 import { CTxDB, TTransaction } from './CTxDB';
@@ -644,7 +644,8 @@ export class CPolkaStore {
       return;
 
     // the signer is the controller, we need the stash account
-    const stakingLedgerOption = await data.api.query.staking.ledger.at(data.blockHash, ex.signature.signer) as Option<StakingLedger>;
+    const account = ex.signature.signer.toString();
+    const stakingLedgerOption = await data.api.query.staking.ledger.at(data.blockHash, account) as Option<StakingLedger>;
     const stakingLedger = stakingLedgerOption.unwrapOr(null);
     if (!stakingLedger)
       return;
