@@ -585,9 +585,9 @@ export class CPolkaStore {
     const beneficiaryX1 = beneficiary.asX1;
 
     if (!destX1.isParachain)
-      throw 'destX1 wrong Type';
+      return;
     if (!beneficiaryX1.isAccountId32)
-      throw 'beneficiaryX1 wrong Type';
+      return;
 
     const parachain = destX1.asParachain.toString();
     const net = beneficiaryX1.asAccountId32.network.toString();
@@ -595,12 +595,11 @@ export class CPolkaStore {
 
     for (let i = 0; i < assets.length; i++) {
       if (!assets[i].isConcreteFungible) {
-        throw 'assets[' + i + '] wrong Type';
-        //continue;
+        continue;
       }
       const a = assets[i].asConcreteFungible;
       if (!a.id.isNull)
-        throw 'MultiAssetConcreteFungible wrong Type';
+        continue;
 
       const tx: TTransaction = {
         chain: data.db.chain,
