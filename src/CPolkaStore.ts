@@ -1,5 +1,6 @@
 import { ApiPromise } from '@polkadot/api';
-import { BlockHash, RuntimeVersion, MultiLocation, MultiAsset } from '@polkadot/types/interfaces';
+import { Compact, Option } from '@polkadot/types';
+import { BlockHash, RuntimeVersion, MultiLocation, MultiAsset, StakingLedger, BalanceOf } from '@polkadot/types/interfaces';
 import { IBlock, IChainData, IExtrinsic, ISanitizedEvent, IOnInitializeOrFinalize, IAccountBalanceInfo, IAccountStakingInfo } from './types';
 import ApiHandler from './ApiHandler';
 import { CTxDB, TTransaction } from './CTxDB';
@@ -556,7 +557,8 @@ export class CPolkaStore {
   private async ProcessMissingEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number, specVer: number): Promise<void> {
     await Promise.all([
       this.ProcessMissingReserveRepatriated(data, ex, exIdx, ev, evIdx, specVer),
-      this.ProcessMissingParachainTransfer(data, ex, exIdx, ev, evIdx, specVer)
+      this.ProcessMissingParachainTransfer(data, ex, exIdx, ev, evIdx, specVer),
+      this.ProcessMissingStakingRebond(data, ex, exIdx, ev, evIdx, specVer)
     ]);
   }
 
@@ -566,7 +568,8 @@ export class CPolkaStore {
 
     if (!ex.signature ||  // we need a signer as sender
       evIdx ||            // only once per extrinsic
-      ex.method != 'xcmPallet.reserveTransferAssets' && ex.method != 'xcmPallet.teleportAssets')
+      !ex.success ||
+      (ex.method != 'xcmPallet.reserveTransferAssets' && ex.method != 'xcmPallet.teleportAssets'))
       return;
 
     const dest = ex.args.dest as MultiLocation;
@@ -600,7 +603,7 @@ export class CPolkaStore {
 
       const tx: TTransaction = {
         chain: data.db.chain,
-        id: data.block.number + '-' + exIdx + '_ev' + evIdx + '_2',
+        id: data.block.number + '-' + exIdx + '_TransferParachain',
         height: data.blockNr,
         blockHash: data.block.hash.toString(),
         type: ex.method,
@@ -628,6 +631,54 @@ export class CPolkaStore {
   }
 
   // --------------------------------------------------------------
+  // process missing events staking.rebond
+  private async ProcessMissingStakingRebond(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number, specVer: number): Promise<void> {
+
+    if (9050 <= specVer) // from specVer 9050 nothing to do
+      return;
+
+    if (!ex.signature ||  // we need a signer as sender
+      evIdx ||            // only once per extrinsic
+      !ex.success ||
+      ex.method != 'staking.rebond')
+      return;
+
+    // the signer is the controller, we need the stash account
+    const stakingLedgerOption = await data.api.query.staking.ledger.at(data.blockHash, ex.signature.signer) as Option<StakingLedger>;
+    const stakingLedger = stakingLedgerOption.unwrapOr(null);
+    if (!stakingLedger)
+      return;
+
+    const value = ex.args.value as Compact<BalanceOf>;
+
+    const tx: TTransaction = {
+      chain: data.db.chain,
+      id: data.block.number + '-' + exIdx + '_StakingRebond',
+      height: data.blockNr,
+      blockHash: data.block.hash.toString(),
+      type: ex.method,
+      subType: undefined,
+      event: 'staking.Bonded_e',      // emulated
+      addData: stakingLedger.stash.toString(),
+      timestamp: GetTime(data.block.extrinsics),
+      specVersion: undefined,
+      transactionVersion: undefined,
+      authorId: undefined,
+      senderId: undefined,
+      recipientId: undefined,
+      amount: value.toBigInt(),
+      totalFee: undefined,
+      feeBalances: undefined,
+      feeTreasury: undefined,
+      tip: undefined,
+      success: undefined
+    };
+
+    data.txs.push(tx);
+
+  }
+
+  // --------------------------------------------------------------
   // process missing balances.ReserveRepatriated event
   private async ProcessMissingReserveRepatriated(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number, specVer: number): Promise<void> {
 
@@ -651,7 +702,7 @@ export class CPolkaStore {
 
       const tx: TTransaction = {
         chain: data.db.chain,
-        id: data.block.number + '-' + exIdx + '_ev' + evIdx + '_1',
+        id: data.block.number + '-' + exIdx + '_ev' + evIdx + '_ReserveRepatriated',
         height: data.blockNr,
         blockHash: data.block.hash.toString(),
         type: ex.method,
