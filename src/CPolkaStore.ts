@@ -575,14 +575,14 @@ export class CPolkaStore {
     const dest = ex.args.dest as MultiLocation;
     const beneficiary = ex.args.beneficiary as MultiLocation;
     const assets = ex.args.assets as MultiAsset[];
-    if (!dest.isX1)
+    if (!dest.isX1 && !dest.isX2)
       return;
 
-    if (!beneficiary.isX1)
+    if (!beneficiary.isX1 && !beneficiary.isX2)
       return;
 
-    const destX1 = dest.asX1;
-    const beneficiaryX1 = beneficiary.asX1;
+    const destX1 = dest.isX1 ? dest.asX1 : dest.asX2[1];
+    const beneficiaryX1 = beneficiary.isX1 ? beneficiary.asX1 : beneficiary.asX2[1];
 
     if (!destX1.isParachain)
       return;
@@ -598,8 +598,8 @@ export class CPolkaStore {
         continue;
       }
       const a = assets[i].asConcreteFungible;
-      if (!a.id.isNull)
-        continue;
+      //      if (!a.id.isNull)
+      //        continue;
 
       const tx: TTransaction = {
         chain: data.db.chain,
