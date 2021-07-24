@@ -1,6 +1,6 @@
 import { ApiPromise } from '@polkadot/api';
 import { Compact, Option } from '@polkadot/types';
-import { BlockHash, RuntimeVersion, MultiLocation, MultiAsset, StakingLedger, BalanceOf, AccountId } from '@polkadot/types/interfaces';
+import { BlockHash, RuntimeVersion, MultiLocation, MultiAsset, StakingLedger, BalanceOf } from '@polkadot/types/interfaces';
 import { IBlock, IChainData, IExtrinsic, ISanitizedEvent, IOnInitializeOrFinalize, IAccountBalanceInfo, IAccountStakingInfo } from './types';
 import ApiHandler from './ApiHandler';
 import { CTxDB, TTransaction } from './CTxDB';
@@ -651,6 +651,9 @@ export class CPolkaStore {
       return;
 
     const value = ex.args.value as Compact<BalanceOf>;
+    const val = value.toBigInt();
+    if (val > BigInt('10000000000000000000'))    // ignore invalid values (e.g. Block #4100283 polkadot)
+      return;
 
     const tx: TTransaction = {
       chain: data.db.chain,
@@ -667,7 +670,7 @@ export class CPolkaStore {
       authorId: undefined,
       senderId: undefined,
       recipientId: undefined,
-      amount: value.toBigInt(),
+      amount: val,
       totalFee: undefined,
       feeBalances: undefined,
       feeTreasury: undefined,
