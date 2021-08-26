@@ -1,6 +1,6 @@
 import { ApiPromise } from '@polkadot/api';
 import { Compact, Option } from '@polkadot/types';
-import { BlockHash, RuntimeVersion, MultiLocation, MultiAsset, StakingLedger, BalanceOf } from '@polkadot/types/interfaces';
+import { BlockHash, RuntimeVersion, MultiLocation, MultiAssetV0, StakingLedger, BalanceOf, Outcome } from '@polkadot/types/interfaces';
 import { IBlock, IChainData, IExtrinsic, ISanitizedEvent, IOnInitializeOrFinalize, IAccountBalanceInfo, IAccountStakingInfo } from './types';
 import ApiHandler from './ApiHandler';
 import { CTxDB, TTransaction } from './CTxDB';
@@ -572,9 +572,16 @@ export class CPolkaStore {
       (ex.method != 'xcmPallet.reserveTransferAssets' && ex.method != 'xcmPallet.teleportAssets'))
       return;
 
+    if (ev.method != 'xcmPallet.Attempted') // a trigger event for emulated events
+      return;
+
+    const o = ev.data[0] as Outcome;
+    if (!o.isComplete)
+      return;
+
     const dest = ex.args.dest as MultiLocation;
     const beneficiary = ex.args.beneficiary as MultiLocation;
-    const assets = ex.args.assets as MultiAsset[];
+    const assets = ex.args.assets as MultiAssetV0[];
     if (!dest.isX1 && !dest.isX2)
       return;
 
@@ -627,7 +634,6 @@ export class CPolkaStore {
       data.txs.push(tx);
 
     }
-
   }
 
   // --------------------------------------------------------------
