@@ -610,7 +610,7 @@ export class CPolkaStore {
 
       const tx: TTransaction = {
         chain: data.db.chain,
-        id: data.block.number + '-' + exIdx + '_TransferParachain',
+        id: data.block.number + '-' + exIdx + '_TransferParachain' + (i + 1),
         height: data.blockNr,
         blockHash: data.block.hash.toString(),
         type: ex.method,
