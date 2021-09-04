@@ -668,7 +668,7 @@ export class CPolkaStore {
       blockHash: data.block.hash.toString(),
       type: ex.method,
       subType: undefined,
-      event: 'staking.Bonded_e',      // emulated
+      event: 'staking.Bonded',
       addData: stakingLedger.stash.toString(),
       timestamp: GetTime(data.block.extrinsics),
       specVersion: undefined,
