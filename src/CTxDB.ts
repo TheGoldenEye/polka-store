@@ -31,18 +31,12 @@ export class CTxDB {
       this._options.path = filename;
     this._chain = chain;
 
-    // write migration message after 1s, if necessary
-    const timeoutMigration = setTimeout(() => {
-      console.log('Apply database migrations, please wait ...\n');
-    }, 1000);
+    console.log('Apply database migrations, please wait ...\n');
 
     db(this._options);
     db().defaultSafeIntegers(true);
     this._db = db;
     this._maxHeight = this.CalcMaxHeight();
-
-    // kill migration message, if not done
-    clearTimeout(timeoutMigration);
 
     process.on('exit', () => db().close());     // close database on exit
   }
