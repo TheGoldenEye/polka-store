@@ -1,6 +1,6 @@
 import { ApiPromise } from '@polkadot/api';
 import { Compact, Option } from '@polkadot/types';
-import { BlockHash, RuntimeVersion, MultiLocation, MultiAssetV0, StakingLedger, BalanceOf, Outcome } from '@polkadot/types/interfaces';
+import { BlockHash, RuntimeVersion, MultiLocationV0, MultiAssetV0, StakingLedger, BalanceOf, Outcome } from '@polkadot/types/interfaces';
 import { IBlock, IChainData, IExtrinsic, ISanitizedEvent, IOnInitializeOrFinalize, IAccountBalanceInfo, IAccountStakingInfo } from './types';
 import ApiHandler from './ApiHandler';
 import { CTxDB, TTransaction } from './CTxDB';
@@ -579,8 +579,8 @@ export class CPolkaStore {
     if (!o.isComplete)
       return;
 
-    const dest = ex.args.dest as MultiLocation;
-    const beneficiary = ex.args.beneficiary as MultiLocation;
+    const dest = ex.args.dest as MultiLocationV0;
+    const beneficiary = ex.args.beneficiary as MultiLocationV0;
     const assets = ex.args.assets as MultiAssetV0[];
     if (!dest.isX1 && !dest.isX2)
       return;
