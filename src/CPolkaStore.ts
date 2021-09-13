@@ -486,6 +486,8 @@ export class CPolkaStore {
 
       if (!tx.amount || tx.amount < BigInt('9007199254740991')) // max. bigint
         data.txs.push(tx);
+      else
+        this.ErrorOutEx(tx.id, 'Invalid amount: ' + tx.amount.toString(), false);
     }
   }
 
@@ -519,6 +521,8 @@ export class CPolkaStore {
 
       if (!tx.amount || tx.amount < BigInt('9007199254740991')) // max. bigint
         data.txs.push(tx);
+      else
+        this.ErrorOutEx(tx.id, 'Invalid amount: ' + tx.amount.toString(), false);
     }
   }
 
