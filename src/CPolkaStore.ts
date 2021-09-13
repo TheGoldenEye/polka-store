@@ -484,7 +484,8 @@ export class CPolkaStore {
         success: undefined
       };
 
-      data.txs.push(tx);
+      if (!tx.amount || tx.amount < BigInt('9007199254740991')) // max. bigint
+        data.txs.push(tx);
     }
   }
 
@@ -516,7 +517,8 @@ export class CPolkaStore {
         success: undefined
       };
 
-      data.txs.push(tx);
+      if (!tx.amount || tx.amount < BigInt('9007199254740991')) // max. bigint
+        data.txs.push(tx);
     }
   }
 
