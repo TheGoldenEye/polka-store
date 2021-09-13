@@ -269,52 +269,51 @@ export class CPolkaStore {
   // process general extrinsics
   private async ProcessGeneral(data: TBlockData, ex: IExtrinsic, idxEx: number, ver: RuntimeVersion): Promise<void> {
 
-    if (ex.signature) { // there is a signer
-
-      //const pf = (<RuntimeDispatchInfo>ex.info).partialFee;
-      let subType: string | undefined = undefined;
-      const method = ex.method;
-      if (method == 'proxy.proxy' || method == 'utility.batch') {
-        if (ex.args.call) {
-          subType = ex.args.call.method;
-        }
-        else if (ex.args.calls) {
-          const arr: string[] = [];
-          ex.args.calls.forEach(arg => {
-            if (!arr.includes(arg.method))
-              arr.push(arg.method);
-          });
-          subType = arr.join();
-        }
+    //const pf = (<RuntimeDispatchInfo>ex.info).partialFee;
+    let subType: string | undefined = undefined;
+    const method = ex.method;
+    if (method == 'proxy.proxy' || method == 'utility.batch') {
+      if (ex.args.call) {
+        subType = ex.args.call.method;
       }
-
-      const tx: TTransaction = {
-        chain: data.db.chain,
-        id: data.block.number + '-' + idxEx,
-        height: data.blockNr,
-        blockHash: data.block.hash.toString(),
-        type: method,
-        subType: subType,
-        event: undefined,
-        addData: undefined,
-        timestamp: GetTime(data.block.extrinsics),
-        specVersion: ver.specVersion.toNumber(),
-        transactionVersion: ver.transactionVersion.toNumber(),
-        authorId: data.block.authorId?.toString(),
-        senderId: ex.signature.signer.toString(),
-        recipientId: undefined,
-        amount: undefined,
-        totalFee: undefined,
-        feeBalances: undefined,
-        feeTreasury: undefined,
-        tip: ex.tip?.toBigInt(),
-        success: ex.success ? 1 : 0
-      };
-
-      this.CalcTotalFee(ex, tx); // calculate totalFee fee based on balances.Deposit and treasury.Deposit events
-
-      data.txs.push(tx);
+      else if (ex.args.calls) {
+        const arr: string[] = [];
+        ex.args.calls.forEach(arg => {
+          if (!arr.includes(arg.method))
+            arr.push(arg.method);
+        });
+        subType = arr.join();
+      }
     }
+
+    const tx: TTransaction = {
+      chain: data.db.chain,
+      id: data.block.number + '-' + idxEx,
+      height: data.blockNr,
+      blockHash: data.block.hash.toString(),
+      type: method,
+      subType: subType,
+      event: undefined,
+      addData: undefined,
+      timestamp: GetTime(data.block.extrinsics),
+      specVersion: ver.specVersion.toNumber(),
+      transactionVersion: ver.transactionVersion.toNumber(),
+      authorId: data.block.authorId?.toString(),
+      senderId: ex.signature?.signer.toString(),
+      recipientId: undefined,
+      amount: undefined,
+      totalFee: undefined,
+      feeBalances: undefined,
+      feeTreasury: undefined,
+      tip: ex.tip?.toBigInt(),
+      success: ex.success ? 1 : 0
+    };
+
+    this.CalcTotalFee(ex, tx); // calculate totalFee fee based on balances.Deposit and treasury.Deposit events
+
+    //fees come from the relay chain (signed ex), but can also come from validating the parachains
+    if (ex.signature || tx.totalFee)
+      data.txs.push(tx);
   }
 
   // --------------------------------------------------------------
