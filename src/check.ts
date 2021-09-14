@@ -52,7 +52,8 @@ async function main() {
 
   const lastBlock = Number(db().queryFirstRow('SELECT max(height) AS val FROM transactions').val);
   const sBlock = process.argv[3];   // the block nuber was given by command line?
-  const atBlock = isNaN(+sBlock) ? lastBlock : Math.min(+sBlock, lastBlock);  // not behind lastBlock
+  const atBlock0 = isNaN(+sBlock) ? lastBlock : Math.min(+sBlock, lastBlock);  // not behind lastBlock
+  const atBlock = db().queryFirstRow('SELECT max(height) as val FROM transactions WHERE height<=?', atBlock0)?.val;  //adjust block, if not in database
   const date = db().queryFirstRow('SELECT datetime(timestamp/1000, \'unixepoch\', \'localtime\') as val FROM transactions WHERE height=?', atBlock)?.val;
   console.log('Balance data at Block: %d (%s)', atBlock, date ? date : '?');
 
