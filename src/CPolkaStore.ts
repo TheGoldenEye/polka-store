@@ -474,7 +474,7 @@ export class CPolkaStore {
         success: undefined
       };
 
-      if (!tx.amount || tx.amount < BigInt('9007199254740991')) // max. bigint
+      if (!tx.amount || tx.amount <= BigInt('0x7fffffffffffffff')) // max. bigint
         data.txs.push(tx);
       else
         this.ErrorOutEx(tx.id, 'Invalid amount: ' + tx.amount.toString(), false);
@@ -509,7 +509,7 @@ export class CPolkaStore {
         success: undefined
       };
 
-      if (!tx.amount || tx.amount >= BigInt('-9007199254740991')) // max. bigint
+      if (!tx.amount || tx.amount >= -BigInt('0x7fffffffffffffff')) // max. bigint
         data.txs.push(tx);
       else
         this.ErrorOutEx(tx.id, 'Invalid amount: ' + tx.amount.toString(), false);
@@ -628,9 +628,9 @@ export class CPolkaStore {
       };
 
       data.txs.push(tx);
-
     }
   }
+
 
   // --------------------------------------------------------------
   // process missing events staking.rebond
@@ -654,8 +654,6 @@ export class CPolkaStore {
 
     const value = ex.args.value as Compact<BalanceOf>;
     const val = value.toBigInt();
-    if (val > BigInt('10000000000000000000'))    // ignore invalid values (e.g. Block #4100283 polkadot)
-      return;
 
     const tx: TTransaction = {
       chain: data.db.chain,
@@ -680,8 +678,10 @@ export class CPolkaStore {
       success: undefined
     };
 
-    data.txs.push(tx);
-
+    if (val <= BigInt('0x7fffffffffffffff'))   // ignore invalid values (e.g. Block #4100283 polkadot)
+      data.txs.push(tx);
+    else
+      this.ErrorOutEx(tx.id, 'Invalid amount: ' + val.toString(), false);
   }
 
   // --------------------------------------------------------------
