@@ -173,7 +173,7 @@ export class CPolkaStore {
   // process block events
   private async ProcessStakingSlashEvents(data: TBlockData, onIF: IOnInitializeOrFinalize): Promise<void> {
     onIF.events.forEach((ev: ISanitizedEvent, index: number) => {
-      if (ev.method == 'staking.Slash') {
+      if (ev.method == 'staking.Slash' || ev.method == 'staking.Slashed') {   // staking.Slashed from runtime 9090
 
         const tx: TTransaction = {
           chain: data.db.chain,
@@ -182,7 +182,7 @@ export class CPolkaStore {
           blockHash: data.block.hash.toString(),
           type: ev.method,
           subType: undefined,
-          event: ev.method,
+          event: 'staking.Slashed',
           addData: undefined,
           timestamp: GetTime(data.block.extrinsics),
           specVersion: undefined,
@@ -232,15 +232,6 @@ export class CPolkaStore {
   // --------------------------------------------------------------
   // process general extrinsics
   private async ProcessExtrinsics(data: TBlockData): Promise<void> {
-    /*
-        const methodsToScan = [
-          'utility.batch', 'utility.batch_all', 'utility.as_derivative',
-          'proxy.proxy', 'multisig.asMulti',
-          'staking.payoutStakers', 'staking.bond', 'staking.bondExtra', 'staking.unbond',
-          'balances.transfer', 'balances.forceTransfer', 'balances.transferKeepAlive', 'vesting.vestedTransfer', 'vesting.forceVestedTransfer',
-          'identity.requestJudgement' // for ProcessMissingEvents
-        ];
-    */
     const ver = await data.api.rpc.state.getRuntimeVersion(data.block.parentHash); // get runtime version of the block
 
     for (let exIdx = 0, n = data.block.extrinsics.length; exIdx < n; exIdx++) {
@@ -395,9 +386,9 @@ export class CPolkaStore {
   }
 
   // --------------------------------------------------------------
-  // process staking.Reward events
+  // process staking.Rewarded events
   private async ProcessStakingRewardEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number): Promise<void> {
-    if (ev.method == 'staking.Reward') {
+    if (ev.method == 'staking.Reward' || ev.method == 'staking.Rewarded') {   // staking.Rewarded from runtime 9090
 
       const stashId = ev.data[0].toString();                      // AcountID of validator
       if (!this.IsValidAccountID(data.blockNr, exIdx, stashId))   // invalid stashId
@@ -419,7 +410,7 @@ export class CPolkaStore {
         blockHash: data.block.hash.toString(),
         type: ex.method,
         subType: undefined,
-        event: ev.method,
+        event: 'staking.Rewarded',
         addData: stashId,
         timestamp: GetTime(data.block.extrinsics),
         specVersion: undefined,
@@ -446,7 +437,7 @@ export class CPolkaStore {
     let event_suffix = '';
 
     // check if reward destination is staked
-    if (method == 'staking.Reward') {
+    if (method == 'staking.Reward' || method == 'staking.Rewarded') {   // staking.Rewarded from runtime 9090
       const stashId = ev.data[0].toString();                      // AcountID of validator
       if (!this.IsValidAccountID(data.blockNr, exIdx, stashId))   // invalid stashId
         return;
