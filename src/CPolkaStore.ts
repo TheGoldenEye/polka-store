@@ -147,7 +147,6 @@ export class CPolkaStore {
       await this.ProcessBlockDataH(data);
     }
     catch (e) {
-      this._errors++;
       this.ErrorOutB(blockNr, (e as Error).message, true);
     }
   }
@@ -474,10 +473,8 @@ export class CPolkaStore {
         success: undefined
       };
 
-      if (!tx.amount || tx.amount <= BigInt('0x7fffffffffffffff')) // max. bigint
+      if (!tx.amount || this.IsValidBigint(tx.amount, tx.id))
         data.txs.push(tx);
-      else
-        this.ErrorOutEx(tx.id, 'Invalid amount: ' + tx.amount.toString(), false);
     }
   }
 
@@ -509,10 +506,8 @@ export class CPolkaStore {
         success: undefined
       };
 
-      if (!tx.amount || tx.amount >= -BigInt('0x7fffffffffffffff')) // max. bigint
+      if (!tx.amount || this.IsValidBigint(tx.amount, tx.id))
         data.txs.push(tx);
-      else
-        this.ErrorOutEx(tx.id, 'Invalid amount: ' + tx.amount.toString(), false);
     }
   }
 
@@ -678,10 +673,8 @@ export class CPolkaStore {
       success: undefined
     };
 
-    if (val <= BigInt('0x7fffffffffffffff'))   // ignore invalid values (e.g. Block #4100283 polkadot)
+    if (this.IsValidBigint(val, tx.id))   // ignore invalid values (e.g. Block #4100283 polkadot)
       data.txs.push(tx);
-    else
-      this.ErrorOutEx(tx.id, 'Invalid amount: ' + val.toString(), false);
   }
 
   // --------------------------------------------------------------
@@ -763,14 +756,28 @@ export class CPolkaStore {
   }
 
   // --------------------------------------------------------------
+  // checks, if b is a valid bigint
+  // writes error to stderr, if extrinsicId!=''
+  private IsValidBigint(b: bigint, extrinsicId = ''): boolean {
+    const biMax = BigInt('0x7fffffffffffffff'); // max. bigint
+    const ok = (b >= -biMax) && (b <= biMax);
+    if (!ok && extrinsicId != '') {
+      this.ErrorOutEx(extrinsicId, 'Invalid bigint value: ' + b.toString(), false);
+    }
+    return ok;
+  }
+
+  // --------------------------------------------------------------
   // write Error (Block) to stderr
   private ErrorOutB(blockNr: number, msg: string, separator: boolean): void {
+    this._errors++;
     console.error('BlockNr: %d Error: %s%s', blockNr, msg, separator ? '\n------------------------------' : '');
   }
 
   // --------------------------------------------------------------
   // write Error (Extrinsic) to stderr
   private ErrorOutEx(extrinsicId: string, msg: string, separator: boolean): void {
+    this._errors++;
     console.error('Extrinsic: %s Error: %s%s', extrinsicId, msg, separator ? '\n------------------------------' : '');
   }
 }
