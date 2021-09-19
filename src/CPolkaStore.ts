@@ -733,10 +733,10 @@ export class CPolkaStore {
     if (ex.paysFee)
       ex.events.forEach((ev: ISanitizedEvent) => {
         if (ev.method == 'balances.Deposit') {
-          tx.feeBalances = BigInt(ev.data[1].toString());
+          tx.feeBalances = (tx.feeBalances || BigInt(0)) + BigInt(ev.data[1].toString());
         }
         else if (ev.method == 'treasury.Deposit') {
-          tx.feeTreasury = BigInt(ev.data[0].toString());
+          tx.feeTreasury = (tx.feeTreasury || BigInt(0)) + BigInt(ev.data[0].toString());
         }
       });
 
