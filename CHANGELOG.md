@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## 1.6.0 Sep 23, 2021
+
+Changes:
+
+- updated dependency: @polkadot/api v6.0.5
+- Create 'synthetic events' (not really existing) for inter chain transfers
+- Add emulated staking.Bonded event for Staking.Rebond exxtrinsic (specVer<9050 only)
+- increase in database performance
+- adaptations to parachains
+
+## 1.5.0 Mar 18, 2021
+
+Changes:
+
+- Process events for all extrinsic methods
+- New Node.js dependency: Version 12.x needed
+- Updated dependencies
+
 ## 1.4.0 Jan 11, 2021
 
 Changes:

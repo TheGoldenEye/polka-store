@@ -168,7 +168,7 @@ if not, at the last block stored in the database.
 
 ### 3.2 Copy example database
 
-If you do not want to start from scratch, you can copy my provided example
+If you do not want to start from scratch, you can copy and unzip my provided example
 databases to the data directory. The program will continue scanning the blockchain
 starting from the last block found in the database.  
 If the data directory is empty, a new database is created and the blockchain is
@@ -176,11 +176,11 @@ scanned from the beginning.
 
 Available example databases:
 
-|  Database   | Last Block |     Date     |   Download   |
-|:------------|:-----------|:-------------|:-------------|
-| Polkadot.db | 4170349    | Mar 13, 2021 | [Polkadot.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)  |
-| Kusama.db   | 6589039    | Mar 13, 2021 | [Kusama.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)    |
-| Westend.db  | 4757288    | Mar 13, 2021 | [Westend.db](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)   |
+|   Database  | Last Block |     Date     |   Download   |
+|:---------------|:-----------|:-------------|:-------------|
+| Polkadot.db | 4170349    | Mar 13, 2021 | [Polkadot.db.7z](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)  |
+| Kusama.db   | 6589039    | Mar 13, 2021 | [Kusama.db.7z](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)    |
+| Westend.db  | 4757288    | Mar 13, 2021 | [Westend.db.7z](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)   |
 
 ## 4 Running
 
