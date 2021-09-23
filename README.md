@@ -177,10 +177,10 @@ scanned from the beginning.
 Available example databases:
 
 |   Database  | Last Block |     Date     |   Download   |
-|:---------------|:-----------|:-------------|:-------------|
-| Polkadot.db | 4170349    | Mar 13, 2021 | [Polkadot.db.7z](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)  |
-| Kusama.db   | 6589039    | Mar 13, 2021 | [Kusama.db.7z](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)    |
-| Westend.db  | 4757288    | Mar 13, 2021 | [Westend.db.7z](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)   |
+|:------------|:-----------|:-------------|:-------------|
+| Polkadot.db | 6959351    | Sep 23, 2021 | [Polkadot.db.7z](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)  |
+| Kusama.db   | 9352038    | Sep 23, 2021 | [Kusama.db.7z](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)    |
+| Westend.db  | 7499911    | Sep 23, 2021 | [Westend.db.7z](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)   |
 
 ## 4 Running
 
