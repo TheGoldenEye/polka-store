@@ -7,6 +7,7 @@ import { CTxDB, TTransaction } from './CTxDB';
 import { CLogBlockNr } from "./CLogBlockNr";
 import * as getPackageVersion from '@jsbits/get-package-version';
 import { GetTime, GetNodeVersion } from './utils';
+import { statSync } from 'fs';
 
 export type TBlockData = {
   api: ApiPromise,
@@ -313,7 +314,7 @@ export class CPolkaStore {
       this.ProcessTransferEvents(data, ex, exIdx, ev, evIdx),
       this.ProcesDustLostEvents(data, ex, exIdx, ev, evIdx),
       this.ProcessStakingRewardEvents(data, ex, exIdx, ev, evIdx),
-      this.ProcessStakingBondedEvents(data, ex, exIdx, ev, evIdx),
+      this.ProcessStakingBondedEvents(data, ex, exIdx, ev, evIdx, specVer),
       this.ProcessStakingUnbondedEvents(data, ex, exIdx, ev, evIdx),
       this.ProcessReserveRepatriatedEvents(data, ex, exIdx, ev, evIdx),
       this.ProcessMissingEvents(data, ex, exIdx, ev, evIdx, specVer)
@@ -431,7 +432,7 @@ export class CPolkaStore {
 
   // --------------------------------------------------------------
   // process staking.Bonded events
-  private async ProcessStakingBondedEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number): Promise<void> {
+  private async ProcessStakingBondedEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number, specVer: number): Promise<void> {
     let method = ev.method;
     let event_suffix = '';
 
@@ -449,6 +450,8 @@ export class CPolkaStore {
     }
 
     if (method == 'staking.Bonded') {
+      const stash = ev.data[0].toString();
+      const amount = await this.RepairStakingRebond(ex.method, BigInt(ev.data[1].toString()), data.blockNr, stash, specVer);  // repair amount for runtime <9100
 
       const tx: TTransaction = {
         chain: data.db.chain,
@@ -458,14 +461,14 @@ export class CPolkaStore {
         type: ex.method,
         subType: undefined,
         event: method,
-        addData: ev.data[0].toString(), // AcountID of validator,
+        addData: stash, // AcountID of validator,
         timestamp: GetTime(data.block.extrinsics),
         specVersion: undefined,
         transactionVersion: undefined,
         authorId: undefined,
         senderId: undefined,
         recipientId: undefined,
-        amount: BigInt(ev.data[1].toString()),
+        amount: amount,
         totalFee: undefined,
         feeBalances: undefined,
         feeTreasury: undefined,
@@ -647,8 +650,9 @@ export class CPolkaStore {
     if (!stakingLedger)
       return;
 
+    const stash = stakingLedger.stash.toString();
     const value = ex.args.value as Compact<BalanceOf>;
-    const val = value.toBigInt();
+    const amount = await this.RepairStakingRebond(ex.method, value.toBigInt(), data.blockNr, stash, specVer);  // repair amount for runtime <9100
 
     const tx: TTransaction = {
       chain: data.db.chain,
@@ -658,14 +662,14 @@ export class CPolkaStore {
       type: ex.method,
       subType: undefined,
       event: 'staking.Bonded',
-      addData: stakingLedger.stash.toString(),
+      addData: stash,
       timestamp: GetTime(data.block.extrinsics),
       specVersion: undefined,
       transactionVersion: undefined,
       authorId: undefined,
       senderId: undefined,
       recipientId: undefined,
-      amount: val,
+      amount: amount,
       totalFee: undefined,
       feeBalances: undefined,
       feeTreasury: undefined,
@@ -673,7 +677,7 @@ export class CPolkaStore {
       success: undefined
     };
 
-    if (this.IsValidBigint(val, tx.id))   // ignore invalid values (e.g. Block #4100283 polkadot)
+    if (this.IsValidBigint(amount, tx.id))   // ignore invalid values (e.g. Block #4100283 polkadot)
       data.txs.push(tx);
   }
 
@@ -768,6 +772,21 @@ export class CPolkaStore {
   }
 
   // --------------------------------------------------------------
+  // checks for runtime <=9100 the amount of staking.Bonded event following a staking.Rebond extrinsic 
+  // background: up to runtime 9100 the staking.Bonded event after a staking.rebond ex. has not checked the available balance
+  // e.g. Staking.Rebond amount: 1000 KSM, available KSM: 100, staking.Bonded amount: 1000 KSM (should be max. 100)
+  private async RepairStakingRebond(ex_method: string, amount: bigint, blockNr: number, stash: string, specVer: number): Promise<bigint> {
+    if (specVer > 9100 || ex_method != 'staking.rebond')
+      return amount;
+
+    const si = await this.fetchStakingInfo(blockNr, stash);
+    const siPrev = await this.fetchStakingInfo(blockNr - 1, stash);
+    const val = si ? si.staking.active.toBigInt() : BigInt(0);
+    const valPrev = siPrev ? siPrev.staking.active.toBigInt() : BigInt(0);
+    return val - valPrev;
+  }
+
+  // --------------------------------------------------------------
   // write Error (Block) to stderr
   private ErrorOutB(blockNr: number, msg: string, separator: boolean): void {
     this._errors++;
@@ -780,4 +799,5 @@ export class CPolkaStore {
     this._errors++;
     console.error('Extrinsic: %s Error: %s%s', extrinsicId, msg, separator ? '\n------------------------------' : '');
   }
+
 }
