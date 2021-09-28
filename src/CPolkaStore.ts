@@ -7,7 +7,6 @@ import { CTxDB, TTransaction } from './CTxDB';
 import { CLogBlockNr } from "./CLogBlockNr";
 import * as getPackageVersion from '@jsbits/get-package-version';
 import { GetTime, GetNodeVersion } from './utils';
-import { statSync } from 'fs';
 
 export type TBlockData = {
   api: ApiPromise,
@@ -389,8 +388,9 @@ export class CPolkaStore {
   // process staking.Rewarded events
   private async ProcessStakingRewardEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number): Promise<void> {
     if (ev.method == 'staking.Reward' || ev.method == 'staking.Rewarded') {   // staking.Rewarded from runtime 9090
-
-      const stashId = ev.data[0].toString();                      // AcountID of validator
+      if (ev.data[0].toRawType() != 'AccountId')                    // before Runtime 1050 in Kusama: type 'Balance'
+        return;
+      const stashId = ev.data[0].toString();                      // AccountID of validator
       if (!this.IsValidAccountID(data.blockNr, exIdx, stashId))   // invalid stashId
         return;
 
@@ -438,7 +438,9 @@ export class CPolkaStore {
 
     // check if reward destination is staked
     if (method == 'staking.Reward' || method == 'staking.Rewarded') {   // staking.Rewarded from runtime 9090
-      const stashId = ev.data[0].toString();                      // AcountID of validator
+      if (ev.data[0].toRawType() != 'AccountId')                    // before Runtime 1050 in Kusama: type 'Balance'
+        return;
+      const stashId = ev.data[0].toString();                      // AccountId of validator
       if (!this.IsValidAccountID(data.blockNr, exIdx, stashId))   // invalid stashId
         return;
 
@@ -755,7 +757,7 @@ export class CPolkaStore {
     const len = accountId.length;
     const ok = (len >= 46 && len <= 48);    // account length: kusama:47, polkadot:46-48, westend:48
     if (!ok)
-      this.ErrorOutEx(blockNr + '-' + exIdx, 'Invalid accountId: ' + accountId + ' (length:' + accountId.length + ')', false, false);
+      this.ErrorOutEx(blockNr + '-' + exIdx, 'Invalid accountId: ' + accountId + ' (length:' + accountId.length + ')', false);
     return ok;
   }
 
