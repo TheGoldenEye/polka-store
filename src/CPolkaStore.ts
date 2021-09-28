@@ -755,7 +755,7 @@ export class CPolkaStore {
     const len = accountId.length;
     const ok = (len >= 46 && len <= 48);    // account length: kusama:47, polkadot:46-48, westend:48
     if (!ok)
-      this.ErrorOutEx(blockNr + '-' + exIdx, 'Invalid accountId: ' + accountId + ' (length:' + accountId.length + ')', false);
+      this.ErrorOutEx(blockNr + '-' + exIdx, 'Invalid accountId: ' + accountId + ' (length:' + accountId.length + ')', false, false);
     return ok;
   }
 
