@@ -451,7 +451,7 @@ export class CPolkaStore {
 
     if (method == 'staking.Bonded') {
       const stash = ev.data[0].toString();
-      const amount = await this.RepairStakingRebond(ex.method, BigInt(ev.data[1].toString()), data.blockNr, stash, specVer);  // repair amount for runtime <9100
+      const amount = await this.RepairStakingRebond(ex, BigInt(ev.data[1].toString()), data.blockNr, stash, specVer);  // repair amount for runtime <9100
 
       const tx: TTransaction = {
         chain: data.db.chain,
@@ -652,7 +652,7 @@ export class CPolkaStore {
 
     const stash = stakingLedger.stash.toString();
     const value = ex.args.value as Compact<BalanceOf>;
-    const amount = await this.RepairStakingRebond(ex.method, value.toBigInt(), data.blockNr, stash, specVer);  // repair amount for runtime <9100
+    const amount = await this.RepairStakingRebond(ex, value.toBigInt(), data.blockNr, stash, specVer);  // repair amount for runtime <9100
 
     const tx: TTransaction = {
       chain: data.db.chain,
@@ -775,28 +775,34 @@ export class CPolkaStore {
   // checks for runtime <=9100 the amount of staking.Bonded event following a staking.Rebond extrinsic 
   // background: up to runtime 9100 the staking.Bonded event after a staking.rebond ex. has not checked the available balance
   // e.g. Staking.Rebond amount: 1000 KSM, available KSM: 100, staking.Bonded amount: 1000 KSM (should be max. 100)
-  private async RepairStakingRebond(ex_method: string, amount: bigint, blockNr: number, stash: string, specVer: number): Promise<bigint> {
-    if (specVer > 9100 || ex_method != 'staking.rebond')
+  private async RepairStakingRebond(ex: IExtrinsic, amount: bigint, blockNr: number, stash: string, specVer: number): Promise<bigint> {
+    if (specVer > 9100 || ex.method != 'staking.rebond')
       return amount;
 
     const si = await this.fetchStakingInfo(blockNr, stash);
     const siPrev = await this.fetchStakingInfo(blockNr - 1, stash);
     const val = si ? si.staking.active.toBigInt() : BigInt(0);
     const valPrev = siPrev ? siPrev.staking.active.toBigInt() : BigInt(0);
-    return val - valPrev;
+    const amount2 = val - valPrev;
+    if (amount != amount2)
+      this.ErrorOutB(blockNr, '\'Staking.Rebond\' with wrong \'staking.Bonded\' event. Rebond:' + amount + ', Actually Bonded:' + amount2, false, false);
+
+    return amount2;
   }
 
   // --------------------------------------------------------------
   // write Error (Block) to stderr
-  private ErrorOutB(blockNr: number, msg: string, separator: boolean): void {
-    this._errors++;
+  private ErrorOutB(blockNr: number, msg: string, separator: boolean, isError = true): void {
+    if (isError)
+      this._errors++;
     console.error('BlockNr: %d Error: %s%s', blockNr, msg, separator ? '\n------------------------------' : '');
   }
 
   // --------------------------------------------------------------
   // write Error (Extrinsic) to stderr
-  private ErrorOutEx(extrinsicId: string, msg: string, separator: boolean): void {
-    this._errors++;
+  private ErrorOutEx(extrinsicId: string, msg: string, separator: boolean, isError = true): void {
+    if (isError)
+      this._errors++;
     console.error('Extrinsic: %s Error: %s%s', extrinsicId, msg, separator ? '\n------------------------------' : '');
   }
 
