@@ -786,9 +786,11 @@ export class CPolkaStore {
     const val = si ? si.staking.active.toBigInt() : BigInt(0);
     const valPrev = siPrev ? siPrev.staking.active.toBigInt() : BigInt(0);
     const amount2 = val - valPrev;
-    if (amount != amount2)
-      this.ErrorOutB(blockNr, '\'Staking.Rebond\' with wrong \'staking.Bonded\' event. Rebond:' + amount + ', Actually Bonded:' + amount2, false, false);
 
+    if (amount2 >= amount)  // amount2 (calculated diff) can be greater because of an additional staking.bondExtra event (e.g. Polkadot Block 1693296)
+      return amount;
+
+    this.ErrorOutB(blockNr, '\'Staking.Rebond\' with wrong \'staking.Bonded\' event. Rebond:' + amount + ', Actually Bonded:' + amount2, false, false);
     return amount2;
   }
 
