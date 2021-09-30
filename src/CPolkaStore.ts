@@ -341,7 +341,7 @@ export class CPolkaStore {
         senderId: ev.data[0].toString(),
         recipientId: ev.data[1].toString(),
         amount: BigInt(ev.data[2].toString()),
-        totalFee: undefined,
+        totalFee: ev.data.length == 4 ? BigInt(ev.data[3].toString()) : undefined,  // optional 4th element is fee (kusama runtime <1050 only) 
         feeBalances: undefined,
         feeTreasury: undefined,
         tip: undefined,
