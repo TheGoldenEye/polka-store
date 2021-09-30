@@ -5,6 +5,7 @@ import { Codec, Registry } from '@polkadot/types/types';
 import { BlockHash } from '@polkadot/types/interfaces/chain';
 import { u8aToHex } from '@polkadot/util';
 import { blake2AsU8a } from '@polkadot/util-crypto';
+import { Balance, Index } from '@polkadot/types/interfaces';
 
 import { IAccountBalanceInfo, IAccountStakingInfo, IBlock, ISanitizedCall, ISanitizedEvent } from './types';
 
@@ -176,26 +177,56 @@ export default class ApiHandler {
 
   // --------------------------------------------------------------
   async fetchBalance(hash: BlockHash, address: string): Promise<IAccountBalanceInfo> {
-    const [header, locks, sysAccount] = await Promise.all([
+
+    const [api, header] = await Promise.all([
+      this._api.at(hash),
       this._api.rpc.chain.getHeader(hash),
-      this._api.query.balances.locks.at(hash, address),
-      this._api.query.system.account.at(hash, address),
     ]);
 
-    const account =
-      sysAccount.data != null
-        ? sysAccount.data
-        : await this._api.query.balances.account.at(hash, address);
+    // before Kusama runtime 1050 there was no system.account method, we have to emulate it
+    const hasSysAccount = api.query.system.account != undefined;
+
+    let nonce: Index;
+    let locks;
+    let free: Balance;
+    let reserved: Balance;
+    let miscFrozen = 0 as unknown as Balance;
+    let feeFrozen = 0 as unknown as Balance;
+    let ok = true;
+
+    if (hasSysAccount) {
+
+      const [sysAccount, l] = await Promise.all([
+        api.query.system.account(address),
+        api.query.balances.locks(address),
+      ]);
+
+      const accountData = sysAccount.data != null ? sysAccount.data : await api.query.balances.account(address);
+
+      nonce = sysAccount.nonce;
+      locks = l;
+      free = accountData.free;
+      reserved = accountData.reserved;
+      miscFrozen = accountData.miscFrozen;
+      feeFrozen = accountData.feeFrozen;
+      ok = accountData && locks != undefined;
+    }
+    else {
+      [nonce, free, reserved, locks] = await Promise.all([
+        api.query.system.accountNonce(address) as Promise<Index>,
+        api.query.balances.freeBalance(address) as Promise<Balance>,
+        api.query.balances.reservedBalance(address) as Promise<Balance>,
+        api.query.balances.locks(address),
+      ]);
+      ok = locks != undefined;
+    }
 
     const at = {
       hash,
       height: header.number.toNumber().toString(10),
     };
 
-    if (account && locks && sysAccount) {
-      const { free, reserved, miscFrozen, feeFrozen } = account;
-      const { nonce } = sysAccount;
-
+    if (ok) {
       return {
         at,
         nonce,
