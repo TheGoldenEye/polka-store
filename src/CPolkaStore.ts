@@ -311,6 +311,7 @@ export class CPolkaStore {
   private async ProcessEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number, specVer: number): Promise<void> {
     await Promise.all([
       this.ProcessTransferEvents(data, ex, exIdx, ev, evIdx),
+      this.ProcessClaimEvents(data, ex, exIdx, ev, evIdx),
       this.ProcesDustLostEvents(data, ex, exIdx, ev, evIdx),
       this.ProcessStakingRewardEvents(data, ex, exIdx, ev, evIdx),
       this.ProcessStakingBondedEvents(data, ex, exIdx, ev, evIdx, specVer),
@@ -342,6 +343,38 @@ export class CPolkaStore {
         recipientId: ev.data[1].toString(),
         amount: BigInt(ev.data[2].toString()),
         totalFee: ev.data.length == 4 ? BigInt(ev.data[3].toString()) : undefined,  // optional 4th element is fee (kusama runtime <1050 only) 
+        feeBalances: undefined,
+        feeTreasury: undefined,
+        tip: undefined,
+        success: undefined
+      };
+
+      data.txs.push(tx);
+    }
+  }
+
+  // --------------------------------------------------------------
+  // process claim events
+  private async ProcessClaimEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number): Promise<void> {
+    if (ev.method == 'claims.Claimed') {
+
+      const tx: TTransaction = {
+        chain: data.db.chain,
+        id: data.block.number + '-' + exIdx + '_ev' + evIdx,
+        height: data.blockNr,
+        blockHash: data.block.hash.toString(),
+        type: ex.method,
+        subType: undefined,
+        event: ev.method,
+        addData: ev.data[1].toString(),           // EthereumAddress
+        timestamp: GetTime(data.block.extrinsics),
+        specVersion: undefined,
+        transactionVersion: undefined,
+        authorId: undefined,
+        senderId: undefined,
+        recipientId: ev.data[0].toString(),       // AccountId
+        amount: BigInt(ev.data[2].toString()),    // Balance
+        totalFee: undefined,
         feeBalances: undefined,
         feeTreasury: undefined,
         tip: undefined,
