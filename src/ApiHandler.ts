@@ -190,8 +190,9 @@ export default class ApiHandler {
     let locks;
     let free: Balance;
     let reserved: Balance;
-    let miscFrozen = 0 as unknown as Balance;
-    let feeFrozen = 0 as unknown as Balance;
+    let miscFrozen = this._api.createType('Balance', 0);
+    let feeFrozen = this._api.createType('Balance', 0);
+
     let ok = true;
 
     if (hasSysAccount) {
