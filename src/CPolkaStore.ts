@@ -730,7 +730,8 @@ export class CPolkaStore {
     if (!checkResVer || checkResVer <= specVer) // higher specVersion, nothing to do
       return;
 
-    if (ev.method == 'identity.JudgementRequested') { // a trigger event for emulated balances.ReserveRepatriated
+//    if (ev.method == 'identity.JudgementRequested') { // a trigger event for emulated balances.ReserveRepatriated
+    if (ev.method == 'identity.JudgementGiven') { // a trigger event for emulated balances.ReserveRepatriated
 
       const regIdx = ev.data[1];
       const registrars = await data.api.query.identity.registrars.at(data.block.hash);
