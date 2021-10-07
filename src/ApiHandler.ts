@@ -62,10 +62,12 @@ export default class ApiHandler {
 
   // --------------------------------------------------------------
   async fetchBlock(hash: BlockHash): Promise<IBlock> {
-    const [{ block }, events] = await Promise.all([
+    const [{ block }, apiAt] = await Promise.all([
       this._api.rpc.chain.getBlock(hash),
-      this._api.query.system.events.at(hash),
+      this._api.at(hash),
     ]);
+
+    const events = await apiAt.query.system.events();
 
     const { parentHash, number, stateRoot, extrinsicsRoot } = block.header;
     const onInitialize = { events: [] as ISanitizedEvent[] };
@@ -250,10 +252,12 @@ export default class ApiHandler {
   // @param stash address of the Stash account to get the staking info of
   // returns null, if stash is not a Stash account
   async fetchStakingInfo(hash: BlockHash, stash: string): Promise<IAccountStakingInfo | null> {
-    const [header, controllerOption] = await Promise.all([
+    const [header, apiAt] = await Promise.all([
       this._api.rpc.chain.getHeader(hash),
-      this._api.query.staking.bonded.at(hash, stash),
+      this._api.at(hash),
     ]);
+
+    const controllerOption = await apiAt.query.staking.bonded(stash);
 
     const at = {
       hash,
@@ -272,9 +276,9 @@ export default class ApiHandler {
       rewardDestination,
       slashingSpansOption,
     ] = await Promise.all([
-      this._api.query.staking.ledger.at(hash, controller),
-      this._api.query.staking.payee.at(hash, stash),
-      this._api.query.staking.slashingSpans.at(hash, stash),
+      apiAt.query.staking.ledger(controller),
+      apiAt.query.staking.payee(stash),
+      apiAt.query.staking.slashingSpans(stash),
     ]);
 
     const stakingLedger = stakingLedgerOption.unwrapOr(null);
