@@ -242,10 +242,22 @@ export class CPolkaStore {
 
       // 2. process events attached to extrinsics
       //if (methodsToScan.includes(method))
-      await Promise.all(ex.events.map(async (ev: ISanitizedEvent, evIdx: number) => {
-        await this.ProcessEvents(data, ex, exIdx, ev, evIdx, ver.specVersion.toNumber());
-      }));
 
+      // blockwise processing to avoid memory overflow
+      let evIdxBase = 0;
+      while (ex.events.length) {    // only 100 events in parallel
+        const e = ex.events.slice(0, 100);
+        ex.events.splice(0, 100);
+        await Promise.all(e.map(async (ev: ISanitizedEvent, evIdx: number) => {
+          await this.ProcessEvents(data, ex, exIdx, ev, evIdxBase + evIdx, ver.specVersion.toNumber());
+        }));
+        evIdxBase += e.length;
+      }
+      /*
+            await Promise.all(ex.events.map(async (ev: ISanitizedEvent, evIdx: number) => {
+              await this.ProcessEvents(data, ex, exIdx, ev, evIdx, ver.specVersion.toNumber());
+            }));
+      */
       // sequential:
       /*
       if (methodsToScan.includes(method))
