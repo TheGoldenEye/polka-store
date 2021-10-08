@@ -62,18 +62,18 @@ export default class ApiHandler {
 
   // --------------------------------------------------------------
   async fetchBlock(hash: BlockHash): Promise<IBlock> {
-    const [{ block }, apiAt] = await Promise.all([
-      this._api.rpc.chain.getBlock(hash),
-      this._api.at(hash),
-    ]);
+    const apiAt = await this._api.at(hash);
 
-    const events = await apiAt.query.system.events();
+    const [{ block }, header, events] = await Promise.all([
+      this._api.rpc.chain.getBlock(hash),
+      this._api.derive.chain.getHeader(hash),
+      apiAt.query.system.events(),
+    ]);
 
     const { parentHash, number, stateRoot, extrinsicsRoot } = block.header;
     const onInitialize = { events: [] as ISanitizedEvent[] };
     const onFinalize = { events: [] as ISanitizedEvent[] };
 
-    const header = await this._api.derive.chain.getHeader(hash);
     const authorId = header?.author;
 
     const logs = block.header.digest.logs.map((log) => {
@@ -252,12 +252,12 @@ export default class ApiHandler {
   // @param stash address of the Stash account to get the staking info of
   // returns null, if stash is not a Stash account
   async fetchStakingInfo(hash: BlockHash, stash: string): Promise<IAccountStakingInfo | null> {
-    const [header, apiAt] = await Promise.all([
-      this._api.rpc.chain.getHeader(hash),
-      this._api.at(hash),
-    ]);
+    const apiAt = await this._api.at(hash);
 
-    const controllerOption = await apiAt.query.staking.bonded(stash);
+    const [header, controllerOption] = await Promise.all([
+      this._api.rpc.chain.getHeader(hash),
+      apiAt.query.staking.bonded(stash),
+    ]);
 
     const at = {
       hash,
