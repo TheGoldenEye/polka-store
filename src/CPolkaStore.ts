@@ -742,7 +742,7 @@ export class CPolkaStore {
     if (!checkResVer || checkResVer <= specVer) // higher specVersion, nothing to do
       return;
 
-//    if (ev.method == 'identity.JudgementRequested') { // a trigger event for emulated balances.ReserveRepatriated
+    //    if (ev.method == 'identity.JudgementRequested') { // a trigger event for emulated balances.ReserveRepatriated
     if (ev.method == 'identity.JudgementGiven') { // a trigger event for emulated balances.ReserveRepatriated
 
       const regIdx = ev.data[1];
@@ -824,7 +824,7 @@ export class CPolkaStore {
   // background: up to runtime 9100 the staking.Bonded event after a staking.rebond ex. has not checked the available balance
   // e.g. Staking.Rebond amount: 1000 KSM, available KSM: 100, staking.Bonded amount: 1000 KSM (should be max. 100)
   private async RepairStakingRebond(ex: IExtrinsic, amount: bigint, blockNr: number, stash: string, specVer: number): Promise<bigint> {
-    if (specVer > 9100 || ex.method != 'staking.rebond')
+    if (/*specVer > 9100 ||*/ ex.method != 'staking.rebond')
       return amount;
 
     const si = await this.fetchStakingInfo(blockNr, stash);
