@@ -820,11 +820,11 @@ export class CPolkaStore {
   }
 
   // --------------------------------------------------------------
-  // checks for runtime <=9100 the amount of staking.Bonded event following a staking.Rebond extrinsic 
-  // background: up to runtime 9100 the staking.Bonded event after a staking.rebond ex. has not checked the available balance
+  // checks for runtime <=9111 the amount of staking.Bonded event following a staking.Rebond extrinsic 
+  // background: up to runtime 9111 the staking.Bonded event after a staking.rebond ex. has not checked the available balance
   // e.g. Staking.Rebond amount: 1000 KSM, available KSM: 100, staking.Bonded amount: 1000 KSM (should be max. 100)
   private async RepairStakingRebond(ex: IExtrinsic, amount: bigint, blockNr: number, stash: string, specVer: number): Promise<bigint> {
-    if (/*specVer > 9100 ||*/ ex.method != 'staking.rebond')
+    if (specVer > 9111 || ex.method != 'staking.rebond')
       return amount;
 
     const si = await this.fetchStakingInfo(blockNr, stash);
