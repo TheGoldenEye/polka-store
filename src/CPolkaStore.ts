@@ -781,11 +781,14 @@ export class CPolkaStore {
   // --------------------------------------------------------------
   // looks for balance.Deposit method with fee infomation and sets this in tx
   // calculates totalFee as sum of feeBalances and feeTreasury
+  // the feeBalances goes to the block author, feeTreasury to the treasury
   private CalcTotalFee(ex: IExtrinsic, tx: TTransaction): boolean {
     if (ex.paysFee)
       ex.events.forEach((ev: ISanitizedEvent) => {
-        if (ev.method == 'balances.Deposit') {
-          tx.feeBalances = (tx.feeBalances || BigInt(0)) + BigInt(ev.data[1].toString());
+        // since runtime 9120 there are several 'balances.Deposit'-entries due to a bug
+        // we use the latest entry with the block author accountId
+        if (ev.method == 'balances.Deposit' && ev.data[0].toString() == tx.authorId) {
+          tx.feeBalances = BigInt(ev.data[1].toString());
         }
         else if (ev.method == 'treasury.Deposit') {
           tx.feeTreasury = (tx.feeTreasury || BigInt(0)) + BigInt(ev.data[0].toString());
