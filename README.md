@@ -178,9 +178,9 @@ Available example databases:
 
 |   Database  | Last Block |     Date     |   Download   |
 |:------------|:-----------|:-------------|:-------------|
-| Polkadot.db | 6959351    | Sep 23, 2021 | [Polkadot.db.7z](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)  |
-| Kusama.db   | 9352038    | Sep 23, 2021 | [Kusama.db.7z](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)    |
-| Westend.db  | 7499911    | Sep 23, 2021 | [Westend.db.7z](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)   |
+| Polkadot.db | 7591964    | Nov 07, 2021 | [Polkadot.db.7z](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)  |
+| Kusama.db   | 9988183    | Nov 07, 2021 | [Kusama.db.7z](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)    |
+| Westend.db  | 8136815    | Nov 07, 2021 | [Westend.db.7z](https://e.pcloud.link/publink/show?code=kZx3eZENGTspnf6YLueJK6F2w8ULTpnFIk)   |
 
 ## 4 Running
 
