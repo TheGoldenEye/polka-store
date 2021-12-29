@@ -1,3 +1,5 @@
+import '@polkadot/api-augment'; // Introduced via `@polkadot/api v7.0.1`.
+
 // Required imports
 import { LoadConfigFile } from './utils';
 import { CPolkaStore } from "./CPolkaStore";

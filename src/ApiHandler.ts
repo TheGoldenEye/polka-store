@@ -93,13 +93,13 @@ export default class ApiHandler {
         tip,
       } = extrinsic;
       const hash = u8aToHex(blake2AsU8a(extrinsic.toU8a(), 256));
-      const call = block.registry.createType('Call', method);
+      const call = apiAt.registry.createType('Call', method);
 
       return {
         method: `${method.section}.${method.method}`,
         signature: isSigned ? { signature, signer } : null,
         nonce,
-        args: this.parseGenericCall(call, block.registry).args,
+        args: this.parseGenericCall(call, apiAt.registry).args,
         tip,
         hash,
         info: {},
