@@ -1,4 +1,5 @@
 import { ApiPromise } from '@polkadot/api';
+import { ApiDecoration } from '@polkadot/api/types';
 import { Compact, Option } from '@polkadot/types';
 import { BlockHash, RuntimeVersion, MultiLocationV0, MultiAssetV0, StakingLedger, BalanceOf, Outcome } from '@polkadot/types/interfaces';
 import { IBlock, IChainData, IExtrinsic, ISanitizedEvent, IOnInitializeOrFinalize, IAccountBalanceInfo, IAccountStakingInfo } from './types';
@@ -10,6 +11,7 @@ import { GetTime, GetNodeVersion } from './utils';
 
 export type TBlockData = {
   api: ApiPromise,
+  apiAt: ApiDecoration<"promise">,
   handler: ApiHandler,
   blockNr: number,        // used before fetching the block 
   blockHash: BlockHash,   // used before fetching the block
@@ -134,11 +136,14 @@ export class CPolkaStore {
   // --------------------------------------------------------------
   async ProcessBlockData(blockNr: number): Promise<void> {
     try {
+      const hash = await this._api.rpc.chain.getBlockHash(blockNr);
+
       const data: TBlockData = {
         api: this._api,
+        apiAt: await this._api.at(hash),
         handler: this._apiHandler,
         block: <IBlock><unknown>0,
-        blockHash: await this._api.rpc.chain.getBlockHash(blockNr),
+        blockHash: hash,
         blockNr: blockNr,
         txs: [],
         db: this._db,
@@ -442,7 +447,7 @@ export class CPolkaStore {
       let payee = stashId; // init payee
 
       // get reward destination from api
-      const rd = await data.api.query.staking.payee.at(data.block.hash, stashId);
+      const rd = await data.apiAt.query.staking.payee(stashId);
       if (rd.isAccount) // reward dest: an explicitely given account 
         payee = rd.asAccount.toString();
       else if (rd.isController) // reward dest: the controller account
@@ -489,7 +494,7 @@ export class CPolkaStore {
       if (!this.IsValidAccountID(data.blockNr, exIdx, stashId))   // invalid stashId
         return;
 
-      const rd = await data.api.query.staking.payee.at(data.block.hash, stashId);
+      const rd = await data.apiAt.query.staking.payee(stashId);
       if (rd.isStaked) {
         method = 'staking.Bonded';  // create a Bonded event
         event_suffix = '_1';        // id must be unique
@@ -746,7 +751,7 @@ export class CPolkaStore {
     if (ev.method == 'identity.JudgementGiven') { // a trigger event for emulated balances.ReserveRepatriated
 
       const regIdx = ev.data[1];
-      const registrars = await data.api.query.identity.registrars.at(data.block.hash);
+      const registrars = await data.apiAt.query.identity.registrars();
       if (!registrars.length)
         return;
       const registrar = registrars[regIdx.toString()].unwrap();
