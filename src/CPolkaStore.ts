@@ -451,7 +451,7 @@ export class CPolkaStore {
       if (rd.isAccount) // reward dest: an explicitely given account 
         payee = rd.asAccount.toString();
       else if (rd.isController) // reward dest: the controller account
-        payee = (await data.api.query.staking.bonded.at(data.block.hash, stashId)).toString();
+        payee = (await data.apiAt.query.staking.bonded(stashId)).toString();
 
       const tx: TTransaction = {
         chain: data.db.chain,
@@ -697,7 +697,7 @@ export class CPolkaStore {
 
     // the signer is the controller, we need the stash account
     const account = ex.signature.signer.toString();
-    const stakingLedgerOption = await data.api.query.staking.ledger.at(data.blockHash, account) as Option<StakingLedger>;
+    const stakingLedgerOption = await data.apiAt.query.staking.ledger(account) as Option<StakingLedger>;
     const stakingLedger = stakingLedgerOption.unwrapOr(null);
     if (!stakingLedger)
       return;
