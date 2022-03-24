@@ -788,17 +788,28 @@ export class CPolkaStore {
   // calculates totalFee as sum of feeBalances and feeTreasury
   // the feeBalances goes to the block author, feeTreasury to the treasury
   private CalcTotalFee(ex: IExtrinsic, tx: TTransaction): boolean {
-    if (ex.paysFee)
+    if (ex.paysFee) {
+      let v = BigInt(0);
+      let v_last = BigInt(0);
       ex.events.forEach((ev: ISanitizedEvent) => {
-        // since runtime 9120 there are several 'balances.Deposit'-entries due to a bug
-        // we use the latest entry with the block author accountId
-        if (ev.method == 'balances.Deposit' && ev.data[0].toString() == tx.authorId) {
-          tx.feeBalances = BigInt(ev.data[1].toString());
+        if (ev.method == 'balances.Deposit' && ev.data[0].toString() == tx.authorId) {  // calc fees for block author
+          v = BigInt(ev.data[1].toString());
+
+          // in runtime 912x there are duplicate 'balances.Deposit'-entries due to a bug
+          // we filter out duplicate entries
+          if (tx.specVersion && tx.specVersion > 9120 && tx.specVersion < 9130) {
+            if (v == v_last)    // duplicate value
+              v = BigInt(0);
+            v_last = v;
+          }
+
+          tx.feeBalances = (tx.feeBalances || BigInt(0)) + v;
         }
         else if (ev.method == 'treasury.Deposit') {
           tx.feeTreasury = (tx.feeTreasury || BigInt(0)) + BigInt(ev.data[0].toString());
         }
       });
+    }
 
     if (tx.feeBalances || tx.feeTreasury)
       tx.totalFee = (tx.feeBalances || BigInt(0)) + (tx.feeTreasury || BigInt(0));
