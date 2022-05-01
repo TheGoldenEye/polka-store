@@ -366,7 +366,8 @@ export class CPolkaStore {
         success: undefined
       };
 
-      data.txs.push(tx);
+      if (!tx.amount || this.IsValidBigint(tx.amount, tx.id))
+        data.txs.push(tx);
     }
   }
 
@@ -398,7 +399,8 @@ export class CPolkaStore {
         success: undefined
       };
 
-      data.txs.push(tx);
+      if (!tx.amount || this.IsValidBigint(tx.amount, tx.id))
+        data.txs.push(tx);
     }
   }
 
@@ -430,7 +432,8 @@ export class CPolkaStore {
         success: undefined
       };
 
-      data.txs.push(tx);
+      if (!tx.amount || this.IsValidBigint(tx.amount, tx.id))
+        data.txs.push(tx);
     }
   }
 
@@ -476,7 +479,8 @@ export class CPolkaStore {
         success: undefined
       };
 
-      data.txs.push(tx);
+      if (!tx.amount || this.IsValidBigint(tx.amount, tx.id))
+        data.txs.push(tx);
     }
   }
 
@@ -594,7 +598,8 @@ export class CPolkaStore {
         success: undefined
       };
 
-      data.txs.push(tx);
+      if (!tx.amount || this.IsValidBigint(tx.amount, tx.id))
+        data.txs.push(tx);
     }
   }
 
