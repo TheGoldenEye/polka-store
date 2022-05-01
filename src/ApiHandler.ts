@@ -254,6 +254,9 @@ export default class ApiHandler {
   async fetchStakingInfo(hash: BlockHash, stash: string): Promise<IAccountStakingInfo | null> {
     const apiAt = await this._api.at(hash);
 
+    if (!apiAt.query.staking || !apiAt.query.staking.bonded)
+      return null; // bonding not available
+
     const [header, controllerOption] = await Promise.all([
       this._api.rpc.chain.getHeader(hash),
       apiAt.query.staking.bonded(stash),
