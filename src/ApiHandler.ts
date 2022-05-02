@@ -8,7 +8,7 @@ import { u8aToHex } from '@polkadot/util';
 import { blake2AsU8a } from '@polkadot/util-crypto';
 import { AssetId, Balance, Index } from '@polkadot/types/interfaces';
 
-import { IAssetBalance, IAccountAssetsBalances, IAccountBalanceInfo, IAccountStakingInfo, IBlock, ISanitizedCall, ISanitizedEvent } from './types';
+import { IAssetBalance, IAccountAssetsBalances, IAccountBalanceInfo, IAccountStakingInfo, IBlock, ISanitizedCall, ISanitizedEvent, IAssetInfo } from './types';
 
 // These two types (`PalletAssetsAssetBalance, LegacyPalletAssetsAssetBalance`) are necessary for any
 // runtime pre 9160. It excludes the `reason` field which v9160 introduces via the following PR.
@@ -373,6 +373,31 @@ export default class ApiHandler {
     };
   }
 
+
+  // --------------------------------------------------------------
+  // Fetch an asset's `AssetDetails` and `AssetMetadata` with its `AssetId`.
+  // @param hash `BlockHash` to make call at
+  // @param assetId `AssetId` used to get info and metadata for an asset
+
+  async fetchAssetById(hash: BlockHash, assetId: number | AssetId): Promise<IAssetInfo> {
+    const [{ number }, assetInfo, assetMetaData] = await Promise.all([
+      this._api.rpc.chain.getHeader(hash),
+      this._api.query.assets.asset(assetId),
+      this._api.query.assets.metadata(assetId),
+    ]);
+
+    const at = {
+      hash,
+      height: number.unwrap().toString(10),
+    };
+
+    return {
+      at,
+      assetInfo,
+      assetMetaData,
+    };
+  }
+
   // --------------------------------------------------------------
   // @param keys Extract `assetId`s from an array of storage keys
   private extractAssetIds(keys: StorageKey<[AssetId]>[]): AssetId[] {
@@ -440,14 +465,12 @@ export default class ApiHandler {
          */
         return {
           assetId,
-          balance: historicApi.registry.createType('u128', 0),
-          isFrozen: historicApi.registry.createType('bool', false),
-          isSufficient: historicApi.registry.createType('bool', false),
+          balance: apiAt.registry.createType('u128', 0),
+          isFrozen: apiAt.registry.createType('bool', false),
+          isSufficient: apiAt.registry.createType('bool', false),
         };
       })
-    ).catch((err: Error) => {
-      throw this.createHttpErrorForAddr(address, err);
-    });
+    );
   }
 
   // --------------------------------------------------------------

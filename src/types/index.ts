@@ -1,6 +1,7 @@
 export * from './AccountAssets';
 export * from './AccountBalanceInfo';
 export * from './AccountStakingInfo';
+export * from './Assets';
 export * from './At';
 export * from './Block';
 export * from './ChainData';

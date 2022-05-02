@@ -1,8 +1,11 @@
 import { ApiPromise } from '@polkadot/api';
 import { ApiDecoration } from '@polkadot/api/types';
 import { Compact, Option } from '@polkadot/types';
-import { BlockHash, RuntimeVersion, MultiLocationV0, MultiAssetV0, StakingLedger, BalanceOf, Outcome } from '@polkadot/types/interfaces';
-import { IBlock, IChainData, IExtrinsic, ISanitizedEvent, IOnInitializeOrFinalize, IAccountBalanceInfo, IAccountStakingInfo, IAccountAssetsBalances } from './types';
+import { AssetId, BlockHash, RuntimeVersion, MultiLocationV0, MultiAssetV0, StakingLedger, BalanceOf, Outcome } from '@polkadot/types/interfaces';
+import {
+  IBlock, IChainData, IExtrinsic, ISanitizedEvent, IOnInitializeOrFinalize,
+  IAccountBalanceInfo, IAccountStakingInfo, IAccountAssetsBalances, IAssetInfo
+} from './types';
 import ApiHandler from './ApiHandler';
 import { CTxDB, TTransaction } from './CTxDB';
 import { CLogBlockNr } from "./CLogBlockNr";
@@ -112,14 +115,28 @@ export class CPolkaStore {
   }
 
   // --------------------------------------------------------------
-  async fetchAssetBalances(blockNr: number, address: string, assets: number[]): Promise<IAccountAssetsBalances> {
+  async fetchAssetBalances(blockNr: number, address: string, assets: number[] | null = null): Promise<IAccountAssetsBalances> {
     const hash = await this._api.rpc.chain.getBlockHash(blockNr);
     return await this.fetchAssetBalancesH(hash, address, assets);
   }
 
   // --------------------------------------------------------------
-  async fetchAssetBalancesH(blockHash: BlockHash, address: string, assets: number[]): Promise<IAccountAssetsBalances> {
-    return await this._apiHandler.fetchAssetBalances(blockHash, address, assets);
+  async fetchAssetBalancesH(blockHash: BlockHash, address: string, assets: number[] | null = null): Promise<IAccountAssetsBalances> {
+    let assets1: number[] = [];
+    if (assets)
+      assets1 = assets;
+    return await this._apiHandler.fetchAssetBalances(blockHash, address, assets1);
+  }
+
+  // --------------------------------------------------------------
+  async fetchAssetById(blockNr: number, assetId: number | AssetId): Promise<IAssetInfo> {
+    const hash = await this._api.rpc.chain.getBlockHash(blockNr);
+    return await this.fetchAssetByIdH(hash, assetId);
+  }
+
+  // --------------------------------------------------------------
+  async fetchAssetByIdH(blockHash: BlockHash, assetId: number | AssetId): Promise<IAssetInfo> {
+    return await this._apiHandler.fetchAssetById(blockHash, assetId);
   }
 
   // --------------------------------------------------------------
