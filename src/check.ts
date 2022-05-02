@@ -3,6 +3,9 @@ import { Divide, LoadConfigFile } from './utils';
 import { CPolkaStore } from "./CPolkaStore";
 import * as chalk from 'chalk';
 
+import { AssetMetadata } from '@polkadot/types/interfaces';
+import { IAssetInfo } from './types';
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const db = require('better-sqlite3-helper');
 
@@ -58,12 +61,21 @@ async function main() {
   console.log('Balance data at Block: %d (%s)', atBlock, date ? date : '?');
 
   const unit = api.registry.chainTokens[0];
+  const decimals = api.registry.chainDecimals[0];
+  const plancks = BigInt(Math.pow(10, decimals));
+
+  // Assets available?
+  const arrAllAssets = await polkaStore.fetchAllAssets(atBlock);
+  const arrAssetMetaData = {};
+  arrAllAssets.map((value: IAssetInfo) => {
+    arrAssetMetaData[value.assetId] = value.assetMetaData;
+  });
+  const assetsAvailable = arrAllAssets.length > 0;
 
   // iterate over all test accounts
   for (let i = 0, n = chainData.check_accounts.length; i < n; i++) {
     const name = chainData.check_accounts[i].name;
     const accountID = chainData.check_accounts[i].account;
-    const plancks = BigInt(chainData.planckPerUnit);
 
     // balance calculation
     const feesReceived: bigint = db().queryFirstRow('SELECT sum(feeBalances) AS val FROM transactions WHERE authorId=? and height<=?', accountID, atBlock).val || BigInt(0);
@@ -87,6 +99,21 @@ async function main() {
     const diffBalance = Divide(balanceApiTotal - total, plancks);
     const diffBonded = Divide(bondedApi - bonded, plancks);
 
+    let stBalanceAssets = "";
+    if (assetsAvailable) {
+      const balanceAssets = await polkaStore.fetchAssetBalances(atBlock, accountID);
+      if (balanceAssets.assets) {
+        stBalanceAssets = "Assets: ";
+        for (let i = 0, n = balanceAssets.assets.length; i < n; i++) {
+          const balance = balanceAssets.assets[i].balance.toBigInt();
+          const assetId = Number(balanceAssets.assets[i].assetId);
+          const amd = arrAssetMetaData[assetId];
+          stBalanceAssets += (i ? ", " : " ") + Divide(balance, BigInt(Math.pow(10, amd.decimals.toNumber())));
+          stBalanceAssets += " " + amd.symbol.toHuman();
+        }
+      }
+    }
+
     console.log('------------------------------------------',);
     console.log('Account: %s (%s)', name, accountID);
 
@@ -94,6 +121,9 @@ async function main() {
       console.log(`Balance: ${totalD} ${unit}`);
     else
       console.log(chalk.red(`Balance: ${totalD} ${unit} (calculated) / ${balanceApiTotalD} ${unit} (from API) / Difference: ${diffBalance} ${unit}`));
+
+    if (assetsAvailable)
+      console.log(stBalanceAssets);
 
     if (!diffBonded)
       console.log(`Bonded:  ${bondedD} ${unit}`);
