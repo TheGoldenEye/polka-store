@@ -102,16 +102,17 @@ async function main() {
     let stBalanceAssets = "";
     if (assetsAvailable) {
       const balanceAssets = await polkaStore.fetchAssetBalances(atBlock, accountID);
-      if (balanceAssets.assets) {
-        stBalanceAssets = "Assets: ";
+      if (balanceAssets.assets.length) {
         for (let i = 0, n = balanceAssets.assets.length; i < n; i++) {
           const balance = balanceAssets.assets[i].balance.toBigInt();
           const assetId = Number(balanceAssets.assets[i].assetId);
           const amd = arrAssetMetaData[assetId];
-          stBalanceAssets += (i ? ", " : " ") + Divide(balance, BigInt(Math.pow(10, amd.decimals.toNumber())));
+          stBalanceAssets += (stBalanceAssets > "" ? ", " : " ") + Divide(balance, BigInt(Math.pow(10, amd.decimals.toNumber())));
           stBalanceAssets += " " + amd.symbol.toHuman();
         }
       }
+      if (stBalanceAssets > "")
+        stBalanceAssets = "Assets: " + stBalanceAssets;
     }
 
     console.log('------------------------------------------',);
@@ -122,7 +123,7 @@ async function main() {
     else
       console.log(chalk.red(`Balance: ${totalD} ${unit} (calculated) / ${balanceApiTotalD} ${unit} (from API) / Difference: ${diffBalance} ${unit}`));
 
-    if (assetsAvailable)
+    if (stBalanceAssets > "")
       console.log(stBalanceAssets);
 
     if (!diffBonded)
