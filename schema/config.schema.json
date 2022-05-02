@@ -17,8 +17,6 @@
       "required": [
         "providers",
         "startBlock",
-        "unit",
-        "planckPerUnit",
         "check_accounts"
       ],
       "properties": {
@@ -33,16 +31,6 @@
         "startBlock": {
           "description": "The first block in the chain to be scanned. The default values refer to the blocks with the first transactions on chain.",
           "type": "number",
-          "minimum": 1
-        },
-        "unit": {
-          "description": "The coin unit.",
-          "type": "string",
-          "enum": [ "DOT", "KSM", "WND" ]
-        },
-        "planckPerUnit": {
-          "description": "The count of plancks per coin unit.",
-          "type": "integer",
           "minimum": 1
         },
         "check_accounts": {
