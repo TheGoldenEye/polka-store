@@ -140,6 +140,17 @@ export class CPolkaStore {
   }
 
   // --------------------------------------------------------------
+  async fetchAllAssets(blockNr: number): Promise<IAssetInfo[]> {
+    const hash = await this._api.rpc.chain.getBlockHash(blockNr);
+    return await this.fetchAllAssetsH(hash);
+  }
+
+  // --------------------------------------------------------------
+  async fetchAllAssetsH(blockHash: BlockHash): Promise<IAssetInfo[]> {
+    return await this._apiHandler.fetchAllAssets(blockHash);
+  }
+
+  // --------------------------------------------------------------
   async fetchStakingInfo(blockNr: number, address: string): Promise<IAccountStakingInfo | null> {
     const hash = await this._api.rpc.chain.getBlockHash(blockNr);
     return await this.fetchStakingInfoH(hash, address);

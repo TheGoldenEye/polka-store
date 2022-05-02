@@ -6,6 +6,7 @@ import { IAt } from '.';
 
 export interface IAssetInfo {
 	at: IAt;
+	assetId: AssetId | number;
 	assetInfo: Option<PalletAssetsAssetDetails>;
 	assetMetaData: AssetMetadata;
 }

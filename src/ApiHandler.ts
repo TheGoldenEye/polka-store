@@ -344,22 +344,23 @@ export default class ApiHandler {
   async fetchAssetBalances(hash: BlockHash, address: string, assets: number[]): Promise<IAccountAssetsBalances> {
     const apiAt = await this._api.at(hash);
 
-    // Check if this runtime has the assets pallet
-    if (!apiAt.query.assets)
-      throw new Error("The runtime does not include the assets pallet at this block.");
-
     const { number } = await this._api.rpc.chain.getHeader(hash);
 
-    let response;
-    if (!assets.length) {
-      // query all assets and return them in an array
-      const keys = await apiAt.query.assets.asset.keys();
-      const assetIds = this.extractAssetIds(keys);
+    let response: IAssetBalance[] = [];
 
-      response = await this.queryAssets(apiAt, assetIds, address);
-    } else {
-      // query all assets by the requested AssetIds
-      response = await this.queryAssets(apiAt, assets, address);
+    // Check if this runtime has the assets pallet
+    if (apiAt.query.assets) { // Only, if the runtime includes assets pallet at this block
+
+      if (!assets.length) {
+        // query all assets and return them in an array
+        const keys = await apiAt.query.assets.asset.keys();
+        const assetIds = this.extractAssetIds(keys);
+
+        response = await this.queryAssets(apiAt, assetIds, address);
+      } else {
+        // query all assets by the requested AssetIds
+        response = await this.queryAssets(apiAt, assets, address);
+      }
     }
 
     const at = {
@@ -393,9 +394,45 @@ export default class ApiHandler {
 
     return {
       at,
+      assetId,
       assetInfo,
       assetMetaData,
     };
+  }
+
+  // --------------------------------------------------------------
+  // Fetch asset's `AssetDetails` and `AssetMetadata` for all assets
+  // @param hash `BlockHash` to make call at
+
+  async fetchAllAssets(hash: BlockHash): Promise<IAssetInfo[]> {
+    const apiAt = await this._api.at(hash);
+
+    const ret: IAssetInfo[] = [];
+    if (!apiAt.query.assets)    // chain has no asset Support
+      return ret;
+
+    const [{ number }, keys] = await Promise.all([
+      this._api.rpc.chain.getHeader(hash),
+      apiAt.query.assets.asset.keys(),
+    ]);
+
+    const at = {
+      hash,
+      height: number.unwrap().toString(10),
+    };
+
+    const assetIds = this.extractAssetIds(keys);
+
+    for (let i = 0, n = assetIds.length; i < n; i++) {
+      const assetId = assetIds[i];
+      const [assetInfo, assetMetaData] = await Promise.all([
+        apiAt.query.assets.asset(assetId),
+        apiAt.query.assets.metadata(assetId),
+      ]);
+      ret.push({ at, assetId, assetInfo, assetMetaData })
+    }
+
+    return ret;
   }
 
   // --------------------------------------------------------------
