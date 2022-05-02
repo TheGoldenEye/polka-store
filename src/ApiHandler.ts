@@ -426,8 +426,8 @@ export default class ApiHandler {
     for (let i = 0, n = assetIds.length; i < n; i++) {
       const assetId = assetIds[i];
       const [assetInfo, assetMetaData] = await Promise.all([
-        apiAt.query.assets.asset(assetId),
-        apiAt.query.assets.metadata(assetId),
+        this._api.query.assets.asset(assetId),    // use the latest asset data (not using apiAt)
+        this._api.query.assets.metadata(assetId),
       ]);
       ret.push({ at, assetId, assetInfo, assetMetaData })
     }
