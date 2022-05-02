@@ -68,7 +68,7 @@ async function main() {
   const arrAllAssets = await polkaStore.fetchAllAssets(atBlock);
   const arrAssetMetaData = {};
   arrAllAssets.map((value: IAssetInfo) => {
-    arrAssetMetaData[value.assetId] = value.assetMetaData;
+    arrAssetMetaData[Number(value.assetId)] = value.assetMetaData;
   });
   const assetsAvailable = arrAllAssets.length > 0;
 
