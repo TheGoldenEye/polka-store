@@ -864,7 +864,8 @@ export class CPolkaStore {
     let c1 = 0, c2 = 0;
     ex.events.forEach((ev: ISanitizedEvent) => {
       if (ev.method == 'balances.Withdraw' && ev.data[0].toString() == tx.senderId) {
-        tx.totalFee = BigInt(ev.data[1].toString());
+        if (!tx.totalFee)  // first balances.Withdraw only
+          tx.totalFee = BigInt(ev.data[1].toString());
         c1++;
       }
       else if (ev.method == 'treasury.Deposit') {
@@ -875,7 +876,7 @@ export class CPolkaStore {
 
     if (c1 != 0 || c2 != 0)   // both 0 or both 1 is ok
       if (c1 != 1 || c2 != 1)
-        this.ErrorOutEx(tx.id, 'count total fee: ' + c1 + ' count treasury fee: ' + c2, false);
+        this.ErrorOutEx(tx.id, 'count total fee: ' + c1 + ' count treasury fee: ' + c2, false, c2 > 1);
 
     if (tx.totalFee)
       tx.feeBalances = tx.totalFee - (tx.feeTreasury || BigInt(0));
