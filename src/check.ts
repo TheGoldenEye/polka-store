@@ -3,7 +3,6 @@ import { Divide, LoadConfigFile } from './utils';
 import { CPolkaStore } from "./CPolkaStore";
 import * as chalk from 'chalk';
 
-import { AssetMetadata } from '@polkadot/types/interfaces';
 import { IAssetInfo } from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
