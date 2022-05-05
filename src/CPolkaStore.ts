@@ -951,7 +951,7 @@ export class CPolkaStore {
 
       // case 2: duplicate 'balances.Deposit' events
       if (ev.method == 'balances.Deposit') {
-        if (tx.specVersion && tx.specVersion > 9120 && tx.specVersion < 9130 &&
+        if (tx.specVersion && tx.specVersion >= 9120 && tx.specVersion < 9130 &&
           last && last.method == 'balances.Deposit' && ev.data[1].toString() == last.data[1].toString())
           return;
         else
