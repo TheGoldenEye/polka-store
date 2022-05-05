@@ -846,12 +846,13 @@ export class CPolkaStore {
 
     if (tx.specVersion >= 9120) {
       const fee_new = this.CalcTotalFee_9120(ex, tx);     // consider balances.Withdraw
-      fee = fee_new;
+
+      if (fee_new.totalFee)                               // use only, if successfull
+        fee = fee_new;
 
       // Error Check
-      if (fee_new.totalFee != fee_old.totalFee)
+      if (fee_old.totalFee != fee.totalFee)
         this.ErrorOutEx(tx.id, 'old: total fee: ' + fee_old.totalFee + ' new total fee: ' + fee_new.totalFee, false, false);
-
     }
 
     tx.totalFee = fee.totalFee;
