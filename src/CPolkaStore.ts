@@ -24,6 +24,12 @@ export type TBlockData = {
   chain: string,
 };
 
+export type TFee = {
+  totalFee: bigint | undefined,
+  feeBalances: bigint | undefined,
+  feeTreasury: bigint | undefined
+};
+
 // --------------------------------------------------------------
 // Main Class
 
@@ -834,53 +840,94 @@ export class CPolkaStore {
       return true;
     if (!tx.specVersion)
       return false;
-    if (tx.specVersion < 9120)
-      return this.CalcTotalFee_pre9120(ex, tx);
-    return this.CalcTotalFee_9120(ex, tx);
+
+    const fee_old = this.CalcTotalFee_pre9120(ex, tx);    // sum of feeBalances and feeTreasury
+    let fee = fee_old;
+
+    if (tx.specVersion >= 9120) {
+      const fee_new = this.CalcTotalFee_9120(ex, tx);     // consider balances.Withdraw
+      fee = fee_new;
+
+      // Error Check
+      if (fee_new.totalFee != fee_old.totalFee)
+        this.ErrorOutEx(tx.id, 'old: total fee: ' + fee_old.totalFee + ' new total fee: ' + fee_new.totalFee, false, false);
+
+    }
+
+    tx.totalFee = fee.totalFee;
+    tx.feeBalances = fee.feeBalances;
+    tx.feeTreasury = fee.feeTreasury;
+
+    return tx.totalFee != undefined;
   }
 
   // --------------------------------------------------------------
   // looks for balance.Deposit method with fee infomation and sets this in tx
   // calculates totalFee as sum of feeBalances and feeTreasury
   // the feeBalances goes to the block author, feeTreasury to the treasury
-  private CalcTotalFee_pre9120(ex: IExtrinsic, tx: TTransaction): boolean {
+  private CalcTotalFee_pre9120(ex: IExtrinsic, tx: TTransaction): TFee {
+    const ret: TFee = {
+      totalFee: undefined,
+      feeBalances: undefined,
+      feeTreasury: undefined
+    };
+
+    let v = BigInt(0);
+    let v_last = BigInt(0);
     ex.events.forEach((ev: ISanitizedEvent) => {
       if (ev.method == 'balances.Deposit' && ev.data[0].toString() == tx.authorId) {  // calc fees for block author
-        tx.feeBalances = (tx.feeBalances || BigInt(0)) + BigInt(ev.data[1].toString());
+        v = BigInt(ev.data[1].toString());
+
+        // in runtime 912x there are duplicate 'balances.Deposit'-entries due to a bug
+        // we filter out duplicate entries
+        if (tx.specVersion && tx.specVersion > 9120 && tx.specVersion < 9130) {
+          if (v == v_last)    // duplicate value
+            v = BigInt(0);
+          v_last = v;
+        }
+
+        ret.feeBalances = (ret.feeBalances || BigInt(0)) + v;
       }
       else if (ev.method == 'treasury.Deposit') {
-        tx.feeTreasury = (tx.feeTreasury || BigInt(0)) + BigInt(ev.data[0].toString());
+        ret.feeTreasury = (ret.feeTreasury || BigInt(0)) + BigInt(ev.data[0].toString());
       }
     });
 
-    if (tx.feeBalances || tx.feeTreasury)
-      tx.totalFee = (tx.feeBalances || BigInt(0)) + (tx.feeTreasury || BigInt(0));
-    return (tx.totalFee != undefined);
+    if (ret.feeBalances || ret.feeTreasury)
+      ret.totalFee = (ret.feeBalances || BigInt(0)) + (ret.feeTreasury || BigInt(0));
+    return ret;
   }
 
   // --------------------------------------------------------------
   // starting with runtime 9120 there is a balances.Withdraw event containing the total fee
-  private CalcTotalFee_9120(ex: IExtrinsic, tx: TTransaction): boolean {
-    let c1 = 0, c2 = 0;
+  private CalcTotalFee_9120(ex: IExtrinsic, tx: TTransaction): TFee {
+    const ret: TFee = {
+      totalFee: undefined,
+      feeBalances: undefined,
+      feeTreasury: undefined
+    };
+
     ex.events.forEach((ev: ISanitizedEvent) => {
+      // the fee payment of the sender (initial fee):
       if (ev.method == 'balances.Withdraw' && ev.data[0].toString() == tx.senderId) {
-        if (!tx.totalFee)  // first balances.Withdraw only
-          tx.totalFee = BigInt(ev.data[1].toString());
-        c1++;
+        if (!ret.totalFee)  // first balances.Withdraw only
+          ret.totalFee = BigInt(ev.data[1].toString());
       }
+      // maybe there is a refund to the sender because the final fee is lower than the initial fee:
+      else if (ev.method == 'balances.Deposit' && ev.data[0].toString() == tx.senderId && ret.totalFee) {
+        const v = BigInt(ev.data[1].toString());
+        if (v < ret.totalFee)
+          ret.totalFee -= v;
+      }
+      // fee part going to Treasury:
       else if (ev.method == 'treasury.Deposit') {
-        tx.feeTreasury = BigInt(ev.data[0].toString());
-        c2++;
+        ret.feeTreasury = BigInt(ev.data[0].toString());
       }
     });
 
-    if (c1 != 0 || c2 != 0)   // both 0 or both 1 is ok
-      if (c1 != 1 || c2 != 1)
-        this.ErrorOutEx(tx.id, 'count total fee: ' + c1 + ' count treasury fee: ' + c2, false, c2 > 1);
-
-    if (tx.totalFee)
-      tx.feeBalances = tx.totalFee - (tx.feeTreasury || BigInt(0));
-    return (tx.totalFee != undefined);
+    if (ret.totalFee)
+      ret.feeBalances = ret.totalFee - (ret.feeTreasury || BigInt(0));
+    return ret;
   }
 
   // --------------------------------------------------------------
