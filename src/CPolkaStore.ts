@@ -851,7 +851,7 @@ export class CPolkaStore {
         fee = fee_new;
 
       // Error Check
-      if (fee_old.totalFee != fee.totalFee)
+      if (fee_old.totalFee && fee_old.totalFee != fee.totalFee)
         this.ErrorOutEx(tx.id, 'old: total fee: ' + fee_old.totalFee + ' new total fee: ' + fee_new.totalFee, false, false);
     }
 
