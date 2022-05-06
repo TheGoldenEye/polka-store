@@ -857,7 +857,7 @@ export class CPolkaStore {
 
       // Error Check
       if (fee_old.totalFee && fee_old.totalFee != fee.totalFee)
-        this.ErrorOutEx(tx.id, 'old: total fee: ' + fee_old.totalFee + ' new total fee: ' + fee_new.totalFee, false, false);
+        this.ErrorOutEx(tx.id, 'old: total fee: ' + fee_old.totalFee + ' new total fee: ' + fee_new.totalFee, false, true);
     }
 
     tx.totalFee = fee.totalFee;
@@ -901,7 +901,7 @@ export class CPolkaStore {
       feeTreasury: undefined
     };
 
-    const myBlock = tx.senderId == tx.authorId;
+    const myBlock = tx.senderId == tx.authorId; // a special condition
 
     events.forEach((ev: ISanitizedEvent) => {
       // the fee payment of the sender (initial fee):
