@@ -901,6 +901,8 @@ export class CPolkaStore {
       feeTreasury: undefined
     };
 
+    const myBlock = tx.senderId == tx.authorId;
+
     events.forEach((ev: ISanitizedEvent) => {
       // the fee payment of the sender (initial fee):
       if (ev.method == 'balances.Withdraw' && ev.data[0].toString() == tx.senderId) {
@@ -908,7 +910,7 @@ export class CPolkaStore {
           ret.totalFee = BigInt(ev.data[1].toString());
       }
       // maybe there is a refund to the sender because the final fee is lower than the initial fee:
-      else if (ev.method == 'balances.Deposit' && ev.data[0].toString() == tx.senderId && ret.totalFee) {
+      else if (!myBlock && ev.method == 'balances.Deposit' && ev.data[0].toString() == tx.senderId && ret.totalFee) {
         const v = BigInt(ev.data[1].toString());
         if (v < ret.totalFee)
           ret.totalFee -= v;
