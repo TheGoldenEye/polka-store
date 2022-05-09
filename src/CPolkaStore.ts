@@ -912,7 +912,7 @@ export class CPolkaStore {
       // maybe there is a refund to the sender because the final fee is lower than the initial fee:
       else if (!myBlock && ev.method == 'balances.Deposit' && ev.data[0].toString() == tx.senderId && ret.totalFee) {
         const v = BigInt(ev.data[1].toString());
-        if (v < ret.totalFee)
+        if (v <= ret.totalFee)
           ret.totalFee -= v;
       }
       // fee part going to Treasury:
