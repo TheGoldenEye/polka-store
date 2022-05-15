@@ -92,13 +92,19 @@ export class CPolkaStore {
   }
 
   // --------------------------------------------------------------
+  async LastBlock(): Promise<number> {
+    const header = await this._api.rpc.chain.getHeader();
+    return Number(header.number);
+  }
+
+  // --------------------------------------------------------------
   async ScanChain(): Promise<void> {
     if (!this._api || !this._db)
       return;
 
     const maxBlock = this._db.GetMaxHeight();
-    const header = await this._api.rpc.chain.getHeader();
-    const LogBlock = new CLogBlockNr(this._api, Number(header.number));
+    const lastBlock = await this.LastBlock();
+    const LogBlock = new CLogBlockNr(this._api, lastBlock);
 
     // scan the chain and write block data to database
     const start = Math.max(maxBlock, this._chainData.startBlock);

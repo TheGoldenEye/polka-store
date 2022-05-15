@@ -29,6 +29,8 @@ async function main() {
     return;
   }
 
+  const check_ignoreDB: boolean = chainData.check_ignoreDB ? chainData.check_ignoreDB : false;
+
   // open database
   const options = {
     path: config.filename || 'data/' + chain + '.db',
@@ -37,8 +39,10 @@ async function main() {
     WAL: false, // automatically enable 'PRAGMA journal_mode = WAL'?
     migrate: false,
   }
-  db(options);
-  db().defaultSafeIntegers(true);
+  if (!check_ignoreDB) {
+    db(options);
+    db().defaultSafeIntegers(true);
+  }
 
   process.on('exit', () => db().close());     // close database on exit
 
@@ -51,11 +55,10 @@ async function main() {
     console.log('  no accounts given');
     return;
   }
-
-  const lastBlock = Number(db().queryFirstRow('SELECT max(height) AS val FROM transactions').val);
+  const lastBlock = check_ignoreDB ? await polkaStore.LastBlock() : Number(db().queryFirstRow('SELECT max(height) AS val FROM transactions').val);
   const sBlock = process.argv[3];   // the block nuber was given by command line?
   const atBlock0 = isNaN(+sBlock) ? lastBlock : Math.min(+sBlock, lastBlock);  // not behind lastBlock
-  const atBlock = Number(db().queryFirstRow('SELECT max(height) as val FROM transactions WHERE height<=?', atBlock0)?.val);  //adjust block, if not in database
+  const atBlock = check_ignoreDB ? atBlock0 : Number(db().queryFirstRow('SELECT max(height) as val FROM transactions WHERE height<=?', atBlock0)?.val);  //adjust block, if not in database
   const date = db().queryFirstRow('SELECT datetime(timestamp/1000, \'unixepoch\', \'localtime\') as val FROM transactions WHERE height=?', atBlock)?.val;
   console.log('Balance data at Block: %d (%s)', atBlock, date ? date : '?');
 
@@ -77,15 +80,13 @@ async function main() {
     const accountID = chainData.check_accounts[i].account;
 
     // balance calculation
-    const feesReceived: bigint = db().queryFirstRow('SELECT sum(feeBalances) AS val FROM transactions WHERE authorId=? and height<=?', accountID, atBlock).val || BigInt(0);
-    // feesPaid calculated from feeBalances and feeTreasury:
-    //const feesPaid: bigint = db().queryFirstRow('SELECT COALESCE(sum(feeBalances), 0)+COALESCE(sum(feeTreasury), 0) AS val FROM transactions WHERE senderId=? and height<=?', accountID, atBlock).val || BigInt(0);
-    const feesPaid: bigint = db().queryFirstRow('SELECT sum(totalFee) AS val FROM transactions WHERE senderId=? and height<=?', accountID, atBlock).val || BigInt(0);
-    const paid: bigint = db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE senderId=? and height<=?', accountID, atBlock).val || BigInt(0);
-    const received: bigint = db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE recipientId=? and height<=?', accountID, atBlock).val || BigInt(0);
+    const feesReceived: bigint = check_ignoreDB ? 0 : db().queryFirstRow('SELECT sum(feeBalances) AS val FROM transactions WHERE authorId=? and height<=?', accountID, atBlock).val || BigInt(0);
+    const feesPaid: bigint = check_ignoreDB ? 0 : db().queryFirstRow('SELECT sum(totalFee) AS val FROM transactions WHERE senderId=? and height<=?', accountID, atBlock).val || BigInt(0);
+    const paid: bigint = check_ignoreDB ? 0 : db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE senderId=? and height<=?', accountID, atBlock).val || BigInt(0);
+    const received: bigint = check_ignoreDB ? 0 : db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE recipientId=? and height<=?', accountID, atBlock).val || BigInt(0);
     const total: bigint = feesReceived + received - feesPaid - paid;
     const totalD = Divide(total, plancks);
-    const bonded: bigint = db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE (event=\'staking.Bonded\' or event=\'staking.Unbonded\') and addData=? and height<=?', accountID, atBlock).val || BigInt(0);
+    const bonded: bigint = check_ignoreDB ? 0 : db().queryFirstRow('SELECT sum(amount) AS val FROM transactions WHERE (event=\'staking.Bonded\' or event=\'staking.Unbonded\') and addData=? and height<=?', accountID, atBlock).val || BigInt(0);
     const bondedD = Divide(bonded, plancks);
 
     // balance from API
@@ -95,8 +96,8 @@ async function main() {
     const si = await polkaStore.fetchStakingInfo(atBlock, accountID);
     const bondedApi = si ? si.staking.active.toBigInt() : BigInt(0);
     const bondedApiD = Divide(bondedApi, plancks);
-    const diffBalance = Divide(balanceApiTotal - total, plancks);
-    const diffBonded = Divide(bondedApi - bonded, plancks);
+    const diffBalance = check_ignoreDB ? 0 : Divide(balanceApiTotal - total, plancks);
+    const diffBonded = check_ignoreDB ? 0 : Divide(bondedApi - bonded, plancks);
 
     let stBalanceAssets = "";
     if (assetsAvailable) {
@@ -118,7 +119,7 @@ async function main() {
     console.log('Account: %s (%s)', name, accountID);
 
     if (!diffBalance)
-      console.log(`Balance: ${totalD} ${unit}`);
+      console.log(`Balance: ${balanceApiTotalD} ${unit}`);
     else
       console.log(chalk.red(`Balance: ${totalD} ${unit} (calculated) / ${balanceApiTotalD} ${unit} (from API) / Difference: ${diffBalance} ${unit}`));
 
@@ -126,7 +127,7 @@ async function main() {
       console.log(stBalanceAssets);
 
     if (!diffBonded)
-      console.log(`Bonded:  ${bondedD} ${unit}`);
+      console.log(`Bonded:  ${bondedApiD} ${unit}`);
     else
       console.log(chalk.red(`Bonded:  ${bondedD} ${unit} (calculated) / ${bondedApiD} ${unit} (from API) / Difference: ${diffBonded} ${unit}`));
   }

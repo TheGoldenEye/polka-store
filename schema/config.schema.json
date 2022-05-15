@@ -33,9 +33,14 @@
           "type": "number",
           "minimum": 1
         },
+        "check_ignoreDB": {
+          "description": "If true, the database is ignored. Only the API functions are called.",
+          "type": "boolean",
+          "default": false
+        },
         "check_accounts": {
           "type": "array",
-          "description": "A named account.",
+          "description": "A list of accounts to be checked.",
           "items": {
             "$ref": "#/definitions/NamedAccount"
           }

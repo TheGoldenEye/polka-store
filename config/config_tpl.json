@@ -10,6 +10,7 @@
         "wss://rpc.polkadot.io"
       ],
       "startBlock": 892,
+      "check_ignoreDB": false,
       "check_accounts": [
         { "name": "Example1", "account": "15kUt2i86LHRWCkE3D9Bg1HZAoc2smhn1fwPzDERTb1BXAkX" },
         { "name": "Example2", "account": "12xtAYsRUrmbniiWQqJtECiBQrMn8AypQcXhnQAc6RB6XkLW" }
@@ -23,6 +24,7 @@
         "wss://kusama-rpc.polkadot.io"
       ],
       "startBlock": 3876,
+      "check_ignoreDB": false,
       "check_accounts": [
         { "name": "Example1", "account": "HmFYPT1btmi1T9qqs5WtuNJK93yNdnjjhReZh6emgNQvCHa" },
         { "name": "Example2", "account": "GXPPBuUaZYYYvsEquX55AQ1MRvgZ96kniEKyAVDSdv1SX96" }
@@ -34,6 +36,7 @@
         "wss://westend-rpc.polkadot.io"
       ],
       "startBlock": 1191,
+      "check_ignoreDB": false,
       "check_accounts": [
         { "name": "Example1", "account": "5FnD6fKjTFLDKwBvrieQ6ZthZbgMjppynLhKqiRUft9yr8Nf" },
         { "name": "Example2", "account": "5DfdW2r2hyXzGdXFqAVJKGrtxV2UaacnVNr3sAdgCUDc9N9g" }
