@@ -105,10 +105,12 @@ async function main() {
       if (balanceAssets.assets.length) {
         for (let i = 0, n = balanceAssets.assets.length; i < n; i++) {
           const balance = balanceAssets.assets[i].balance.toBigInt();
-          const assetId = Number(balanceAssets.assets[i].assetId);
-          const amd = arrAssetMetaData[assetId];
-          stBalanceAssets += (stBalanceAssets > "" ? ", " : " ") + Divide(balance, BigInt(Math.pow(10, amd.decimals.toNumber())));
-          stBalanceAssets += " " + amd.symbol.toHuman();
+          if (balance > 0) {
+            const assetId = Number(balanceAssets.assets[i].assetId);
+            const amd = arrAssetMetaData[assetId];
+            stBalanceAssets += (stBalanceAssets > "" ? ", " : " ") + Divide(balance, BigInt(Math.pow(10, amd.decimals.toNumber())));
+            stBalanceAssets += " " + amd.symbol.toHuman();
+          }
         }
       }
       if (stBalanceAssets > "")
