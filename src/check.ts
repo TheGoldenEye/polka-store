@@ -66,6 +66,8 @@ async function main() {
   const decimals = api.registry.chainDecimals[0];
   const plancks = BigInt(Math.pow(10, decimals));
 
+  const isRelayChain = ["Polkadot", "Kusama", "Westend"].includes(chain);
+
   // Assets available?
   const arrAllAssets = await polkaStore.fetchAllAssets(atBlock);
   const arrAssetMetaData = {};
@@ -128,10 +130,12 @@ async function main() {
     if (stBalanceAssets > "")
       console.log(stBalanceAssets);
 
-    if (!diffBonded)
-      console.log(`Bonded:  ${bondedApiD} ${unit}`);
-    else
-      console.log(chalk.red(`Bonded:  ${bondedD} ${unit} (calculated) / ${bondedApiD} ${unit} (from API) / Difference: ${diffBonded} ${unit}`));
+    if (isRelayChain) {
+      if (!diffBonded)
+        console.log(`Bonded:  ${bondedApiD} ${unit}`);
+      else
+        console.log(chalk.red(`Bonded:  ${bondedD} ${unit} (calculated) / ${bondedApiD} ${unit} (from API) / Difference: ${diffBonded} ${unit}`));
+    }
   }
 }
 
