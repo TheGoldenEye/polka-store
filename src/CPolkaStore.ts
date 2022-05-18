@@ -759,12 +759,19 @@ export class CPolkaStore {
     const senderId = ev.data[0].toString();
     const authorId = data.block.authorId?.toString();
 
-    ex.events.forEach((ev: ISanitizedEvent, idx: number) => {
+    //    ex.events.forEach((ev: ISanitizedEvent, idx: number) => {
+    for (let i = evIdx + 1, n = ex.events.length; i < n; i++) {
+
+      const ev = ex.events[i];
+
+      if (ev.method == 'ump.ExecutedUpward')    // end of current block
+        break;
+
       if (ev.method == 'balances.Deposit' && ev.data[0].toString() != authorId) {  // ignore the fee for block author
 
         const tx: TTransaction = {
           chain: data.db.chain,
-          id: data.block.number + '-' + exIdx + '_TransferFromParachain' + (idx + 1),
+          id: data.block.number + '-' + exIdx + '_TransferFromParachain' + (i + 1),
           height: data.blockNr,
           blockHash: data.block.hash.toString(),
           type: ex.method,
@@ -787,7 +794,7 @@ export class CPolkaStore {
 
         data.txs.push(tx);
       }
-    });
+    }
   }
 
   // --------------------------------------------------------------
