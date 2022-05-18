@@ -22,6 +22,7 @@ export type TBlockData = {
   db: CTxDB,
   txs: TTransaction[],
   chain: string,
+  isRelayChain: boolean
 };
 
 export type TFee = {
@@ -198,7 +199,8 @@ export class CPolkaStore {
         blockNr: blockNr,
         txs: [],
         db: this._db,
-        chain: this._chain
+        chain: this._chain,
+        isRelayChain: ["Polkadot", "Kusama", "Westend"].includes(this._chain)
       };
       await this.ProcessBlockDataH(data);
     }
@@ -300,10 +302,11 @@ export class CPolkaStore {
       //if (methodsToScan.includes(method))
 
       // blockwise processing to avoid memory overflow
+      const events = ex.events.slice();   // create a copy
       let evIdxBase = 0;
-      while (ex.events.length) {    // only 100 events in parallel
-        const e = ex.events.slice(0, 100);
-        ex.events.splice(0, 100);
+      while (events.length) {    // only 100 events in parallel
+        const e = events.slice(0, 100);
+        events.splice(0, 100);
         await Promise.all(e.map(async (ev: ISanitizedEvent, evIdx: number) => {
           await this.ProcessEvents(data, ex, exIdx, ev, evIdxBase + evIdx, ver.specVersion.toNumber());
         }));
@@ -367,7 +370,7 @@ export class CPolkaStore {
       success: ex.success ? 1 : 0
     };
 
-    this.CalcTotalFee(ex, tx); // calculate totalFee fee based on balances.Deposit and treasury.Deposit events
+    this.CalcTotalFee(data, ex, tx); // calculate totalFee fee based on balances.Deposit and treasury.Deposit events
 
     //fees come from the relay chain (signed ex), but can also come from validating the parachains
     if (ex.signature || tx.totalFee)
@@ -558,7 +561,7 @@ export class CPolkaStore {
 
     if (method == 'staking.Bonded') {
       const stash = ev.data[0].toString();
-      const amount = await this.RepairStakingRebond(ex, BigInt(ev.data[1].toString()), data.blockNr, stash, specVer);  // repair amount for runtime <9100
+      const amount = await this.RepairStakingRebond(data, ex, BigInt(ev.data[1].toString()), data.blockNr, stash, specVer);  // repair amount for runtime <9100
 
       const tx: TTransaction = {
         chain: data.db.chain,
@@ -659,17 +662,19 @@ export class CPolkaStore {
   private async ProcessMissingEvents(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number, specVer: number): Promise<void> {
     await Promise.all([
       this.ProcessMissingReserveRepatriated(data, ex, exIdx, ev, evIdx, specVer),
-      this.ProcessMissingParachainTransfer(data, ex, exIdx, ev, evIdx, specVer),
+      this.ProcessMissingToParachainTransfer(data, ex, exIdx, ev, evIdx, specVer),
+      this.ProcessMissingFromParachainTransfer(data, ex, exIdx, ev, evIdx, specVer),
       this.ProcessMissingStakingRebond(data, ex, exIdx, ev, evIdx, specVer)
     ]);
   }
 
   // --------------------------------------------------------------
   // process missing events for inter chain transfers
-  private async ProcessMissingParachainTransfer(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number, specVer: number): Promise<void> {
+  private async ProcessMissingToParachainTransfer(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number, specVer: number): Promise<void> {
 
-    if (!ex.signature ||  // we need a signer as sender
-      evIdx ||            // only once per extrinsic
+    if (!data.isRelayChain ||
+      specVer < 9010 ||
+      !ex.signature ||      // we need a signer as sender
       !ex.success ||
       (ex.method != 'xcmPallet.reserveTransferAssets' && ex.method != 'xcmPallet.teleportAssets'))
       return;
@@ -737,12 +742,59 @@ export class CPolkaStore {
     }
   }
 
+  // --------------------------------------------------------------
+  // process missing events for inter chain transfers
+  private async ProcessMissingFromParachainTransfer(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number, specVer: number): Promise<void> {
+
+    if (!data.isRelayChain ||
+      specVer < 9090 ||   // parachains starting with runtime 9090 in kusama / westend
+      ex.signature ||     // transfers from parachain must not have a signer
+      !ex.success ||
+      (ex.method != 'paraInherent.enter'))
+      return;
+
+    if (ev.method != 'balances.Withdraw') // a trigger event for emulated events
+      return;
+
+    const senderId = ev.data[0].toString();
+    const authorId = data.block.authorId?.toString();
+
+    ex.events.forEach((ev: ISanitizedEvent, idx: number) => {
+      if (ev.method == 'balances.Deposit' && ev.data[0].toString() != authorId) {  // ignore the fee for block author
+
+        const tx: TTransaction = {
+          chain: data.db.chain,
+          id: data.block.number + '-' + exIdx + '_TransferFromParachain' + (idx + 1),
+          height: data.blockNr,
+          blockHash: data.block.hash.toString(),
+          type: ex.method,
+          subType: undefined,
+          event: 'balances.TransferFromParachain',    // 'synthetic event', not really existing
+          addData: undefined,
+          timestamp: GetTime(data.block.extrinsics),
+          specVersion: undefined,
+          transactionVersion: undefined,
+          authorId: undefined,
+          senderId: senderId,
+          recipientId: ev.data[0].toString(),
+          amount: BigInt(ev.data[1].toString()),
+          totalFee: undefined,
+          feeBalances: undefined,
+          feeTreasury: undefined,
+          tip: undefined,
+          success: undefined
+        };
+
+        data.txs.push(tx);
+      }
+    });
+  }
 
   // --------------------------------------------------------------
   // process missing events staking.rebond
   private async ProcessMissingStakingRebond(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number, specVer: number): Promise<void> {
 
-    if (9050 <= specVer) // from specVer 9050 nothing to do
+    if (!data.isRelayChain || 9050 <= specVer) // from specVer 9050 nothing to do
       return;
 
     if (!ex.signature ||  // we need a signer as sender
@@ -760,7 +812,7 @@ export class CPolkaStore {
 
     const stash = stakingLedger.stash.toString();
     const value = ex.args.value as Compact<BalanceOf>;
-    const amount = await this.RepairStakingRebond(ex, value.toBigInt(), data.blockNr, stash, specVer);  // repair amount for runtime <9100
+    const amount = await this.RepairStakingRebond(data, ex, value.toBigInt(), data.blockNr, stash, specVer);  // repair amount for runtime <9100
 
     const tx: TTransaction = {
       chain: data.db.chain,
@@ -792,6 +844,9 @@ export class CPolkaStore {
   // --------------------------------------------------------------
   // process missing balances.ReserveRepatriated event
   private async ProcessMissingReserveRepatriated(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number, specVer: number): Promise<void> {
+
+    if (!data.isRelayChain)
+      return;
 
     // balances.Reserved/balances.Unreserved/balances.ReserveRepatriated are new from kusama v2008 / polkadot v13
     // for older runtimes we try to emulate the transfer
@@ -841,10 +896,11 @@ export class CPolkaStore {
 
   // --------------------------------------------------------------
   // calculates totalFee, feeBalances and feeTreasury
-  private CalcTotalFee(ex: IExtrinsic, tx: TTransaction): boolean {
+  private CalcTotalFee(data: TBlockData, ex: IExtrinsic, tx: TTransaction): boolean {
     if (!ex.paysFee)
       return true;
-    if (!tx.specVersion)
+
+    if (!data.isRelayChain || !tx.specVersion)
       return false;
 
     // filter events: determine only those that are necessary for the fee calculation
@@ -995,8 +1051,8 @@ export class CPolkaStore {
   // checks for runtime <=9111 the amount of staking.Bonded event following a staking.Rebond extrinsic 
   // background: up to runtime 9111 the staking.Bonded event after a staking.rebond ex. has not checked the available balance
   // e.g. Staking.Rebond amount: 1000 KSM, available KSM: 100, staking.Bonded amount: 1000 KSM (should be max. 100)
-  private async RepairStakingRebond(ex: IExtrinsic, amount: bigint, blockNr: number, stash: string, specVer: number): Promise<bigint> {
-    if (specVer > 9111 || ex.method != 'staking.rebond')
+  private async RepairStakingRebond(data: TBlockData, ex: IExtrinsic, amount: bigint, blockNr: number, stash: string, specVer: number): Promise<bigint> {
+    if (!data.isRelayChain || specVer > 9111 || ex.method != 'staking.rebond')
       return amount;
 
     const si = await this.fetchStakingInfo(blockNr, stash);
