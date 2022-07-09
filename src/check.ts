@@ -122,19 +122,24 @@ async function main() {
     console.log('------------------------------------------',);
     console.log('Account: %s (%s)', name, accountID);
 
+    if (!diffBalance && !balanceApiTotalD && stBalanceAssets == "") { // empty account
+      //      console.log("  empty");
+      continue;
+    }
+
     if (!diffBalance)
-      console.log(`Balance: ${balanceApiTotalD} ${unit}`);
+      console.log(`  Balance: ${balanceApiTotalD} ${unit}`);
     else
-      console.log(chalk.red(`Balance: ${totalD} ${unit} (calculated) / ${balanceApiTotalD} ${unit} (from API) / Difference: ${diffBalance} ${unit}`));
+      console.log(chalk.red(`  Balance: ${totalD} ${unit} (calculated) / ${balanceApiTotalD} ${unit} (from API) / Difference: ${diffBalance} ${unit}`));
 
     if (stBalanceAssets > "")
-      console.log(stBalanceAssets);
+      console.log("  " + stBalanceAssets);
 
     if (isRelayChain) {
       if (!diffBonded)
-        console.log(`Bonded:  ${bondedApiD} ${unit}`);
+        console.log(`  Bonded:  ${bondedApiD} ${unit}`);
       else
-        console.log(chalk.red(`Bonded:  ${bondedD} ${unit} (calculated) / ${bondedApiD} ${unit} (from API) / Difference: ${diffBonded} ${unit}`));
+        console.log(chalk.red(`  Bonded:  ${bondedD} ${unit} (calculated) / ${bondedApiD} ${unit} (from API) / Difference: ${diffBonded} ${unit}`));
     }
   }
 }
