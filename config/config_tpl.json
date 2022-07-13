@@ -41,6 +41,119 @@
         { "name": "Example1", "account": "5FnD6fKjTFLDKwBvrieQ6ZthZbgMjppynLhKqiRUft9yr8Nf" },
         { "name": "Example2", "account": "5DfdW2r2hyXzGdXFqAVJKGrtxV2UaacnVNr3sAdgCUDc9N9g" }
       ]
+    },
+    "Karura": {
+      "providers": [
+        "wss://karura-rpc-0.aca-api.network",
+        "wss://karura-rpc-1.aca-api.network",
+        "wss://karura.api.onfinality.io/public-ws"
+      ],
+      "startBlock": 1,
+      "check_ignoreDB": true,
+      "check_accounts": [
+        { "name": "Example-Karura",   "account": "xxxx"}
+      ]
+    },
+    "Moonriver": {
+      "providers": [
+        "wss://wss.api.moonriver.moonbeam.network",
+        "wss://moonriver.api.onfinality.io/public-ws"
+      ],
+      "startBlock": 1,
+      "check_ignoreDB": true,
+      "check_accounts": [
+        { "name": "Example-Moonriver","account": "xxxx"}
+      ]
+    },
+    "Shiden": {
+      "providers": [
+        "wss://rpc.shiden.astar.network",
+        "wss://shiden.api.onfinality.io/public-ws"
+      ],
+      "startBlock": 1,
+      "check_ignoreDB": true,
+      "check_accounts": [
+        { "name": "Example-Shiden","account": "xxxx"}
+      ]
+    },
+    "Khala": {
+      "providers": [
+        "wss://khala.api.onfinality.io/public-ws",
+        "wss://khala-api.phala.network/ws"
+      ],
+      "startBlock": 1,
+      "check_ignoreDB": true,
+      "check_accounts": [
+        { "name": "Example-Khala","account": "xxxx"}
+      ]
+    },
+    "Calamari Parachain": {
+      "providers": [
+        "wss://ws.calamari.systems",
+        "wss://calamari.api.onfinality.io/public-ws"
+      ],
+      "startBlock": 1,
+      "check_ignoreDB": true,
+      "check_accounts": [
+        { "name": "Example-Calamari","account": "xxxx"}
+      ]
+    },
+    "Parallel Heiko": {
+      "providers": [
+        "wss://parallel-heiko.api.onfinality.io/public-ws",
+        "wss://heiko-rpc.parallel.fi"
+      ],
+      "startBlock": 1,
+      "check_ignoreDB": true,
+      "check_accounts": [
+        { "name": "Example-ParallelHeiko","account": "xxxx"}
+      ]
+    },
+    "Acala": {
+      "providers": [
+        "wss://acala-rpc-0.aca-api.network",
+        "wss://acala-rpc-1.aca-api.network",
+        "wss://acala.api.onfinality.io/public-ws"
+      ],
+      "startBlock": 1,
+      "check_ignoreDB": true,
+      "check_accounts": [
+        { "name": "Example-Acala","account": "xxxx"}
+      ]
+    },
+    "Moonbeam": {
+      "providers": [
+        "wss://wss.api.moonbeam.network",
+        "wss://moonbeam.api.onfinality.io/public-ws"
+      ],
+      "startBlock": 1,
+      "check_ignoreDB": true,
+      "check_accounts": [
+        { "name": "Example-Moonbeam","account": "xxxx"}
+      ]
+    },
+    "Astar": {
+      "providers": [
+        "wss://rpc.astar.network",
+        "wss://astar.api.onfinality.io/public-ws"
+      ],
+      "startBlock": 1,
+      "check_ignoreDB": true,
+      "check_accounts": [
+        { "name": "Example-Astar","account": "xxxx"}
+      ]
+    },
+    "Parallel": {
+      "providers": [
+        "wss://rpc.parallel.fi",
+        "wss://parallel.api.onfinality.io/public-ws"
+      ],
+      "startBlock_": 291178,
+      "startBlock": 277789,
+      "check_ignoreDB": true,
+      "check_accounts": [
+        { "name": "Example-Parallel","account": "xxxx"}
+      ]
     }
   }
 }
