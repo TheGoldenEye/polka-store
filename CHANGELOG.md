@@ -1,12 +1,22 @@
 # CHANGELOG
 
+## 1.7.0 Jul 13, 2022
+
+Changes:
+
+- updated dependency: @polkadot/api v8.12.2
+- Better fee calculation
+- Check mode: parachain support (with asset balance, if "Assets" pallet ist supported)
+- Check mode: check_ignoreDB flag - only query live balances (no need for polka-store database)
+- Some minor changes
+
 ## 1.6.0 Sep 23, 2021
 
 Changes:
 
 - updated dependency: @polkadot/api v6.0.5
 - Create 'synthetic events' (not really existing) for inter chain transfers
-- Add emulated staking.Bonded event for Staking.Rebond exxtrinsic (specVer<9050 only)
+- Add emulated staking.Bonded event for Staking.Rebond extrinsic (specVer<9050 only)
 - increase in database performance
 - adaptations to parachains
 
