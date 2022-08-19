@@ -2,8 +2,9 @@
 import { Divide, LoadConfigFile } from './utils';
 import { CPolkaStore } from "./CPolkaStore";
 import * as chalk from 'chalk';
-
+import { ApiDecoration } from '@polkadot/api/types';
 import { IAssetInfo } from './types';
+import { AssetMetadata } from '@polkadot/types/interfaces';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const db = require('better-sqlite3-helper');
@@ -62,6 +63,9 @@ async function main() {
   const date = db().queryFirstRow('SELECT datetime(timestamp/1000, \'unixepoch\', \'localtime\') as val FROM transactions WHERE height=?', atBlock)?.val;
   console.log('Balance data at Block: %d (%s)', atBlock, date ? date : '?');
 
+  const hash = await api.rpc.chain.getBlockHash(atBlock);
+  const apiAt = await api.at(hash);
+
   const unit = api.registry.chainTokens[0];
   const decimals = api.registry.chainDecimals[0];
   const plancks = BigInt(Math.pow(10, decimals));
@@ -70,7 +74,7 @@ async function main() {
 
   // Assets available?
   const arrAllAssets = await polkaStore.fetchAllAssets(atBlock);
-  const arrAssetMetaData = {};
+  const arrAssetMetaData: Record<number, AssetMetadata> = {};
   arrAllAssets.map((value: IAssetInfo) => {
     arrAssetMetaData[Number(value.assetId)] = value.assetMetaData;
   });
@@ -102,6 +106,7 @@ async function main() {
     const diffBonded = check_ignoreDB ? 0 : Divide(bondedApi - bonded, plancks);
 
     let stBalanceAssets = "";
+    let stLoanAssets = "";
     if (assetsAvailable) {
       const balanceAssets = await polkaStore.fetchAssetBalances(atBlock, accountID);
       if (balanceAssets.assets.length) {
@@ -117,6 +122,19 @@ async function main() {
       }
       if (stBalanceAssets > "")
         stBalanceAssets = "Assets: " + stBalanceAssets;
+
+      if (apiAt.query.loans) { // Only, if the runtime includes loans pallet at this block
+        for (let i = 0, n = arrAllAssets.length; i < n; i++) {
+          const assetId = arrAllAssets[i].assetId as number;
+          const b = await getLoan(assetId, arrAssetMetaData[assetId], accountID, apiAt);
+          if (b?.balance) {
+            stLoanAssets += (stLoanAssets > "" ? ", " : " ") + b.balance + " " + b.symbol;
+          }
+        }
+        if (stLoanAssets > "")
+          stLoanAssets = "Lend: " + stLoanAssets;
+      }
+
     }
 
     console.log('------------------------------------------',);
@@ -134,6 +152,8 @@ async function main() {
 
     if (stBalanceAssets > "")
       console.log("  " + stBalanceAssets);
+    if (stLoanAssets > "")
+      console.log("  " + stLoanAssets);
 
     if (isRelayChain) {
       if (!diffBonded)
@@ -145,3 +165,24 @@ async function main() {
 }
 
 main().catch(console.error).finally(() => { process.exit() });
+
+// --------------------------------------------------------------
+export interface LoanBalance { balance: number; assetId: number; symbol: string; }
+
+async function getLoan(assetId: number, amd: AssetMetadata, accountID: string, apiAt: ApiDecoration<"promise">): Promise<LoanBalance | undefined> {
+  if (!apiAt.query.loans)
+    return undefined;
+
+  const symbol = amd.symbol.toHuman()?.toString();
+  if (!symbol)
+    return undefined;
+
+  const deposit = BigInt((await apiAt.query.loans.accountDeposits(assetId, accountID) as any).voucherBalance.toString());
+
+  if (!deposit)
+    return { balance: 0, assetId: assetId, symbol: symbol }
+
+  const e = BigInt((await apiAt.query.loans.exchangeRate(assetId)).toString());
+  const v = Divide(deposit * e, BigInt(10 ** (18 + amd.decimals.toNumber())));
+  return { balance: v, assetId: assetId, symbol: symbol }
+}
