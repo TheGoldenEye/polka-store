@@ -2,9 +2,15 @@
 import { Divide, LoadConfigFile } from './utils';
 import { CPolkaStore } from "./CPolkaStore";
 import * as chalk from 'chalk';
+
+import { Vec } from '@polkadot/types';
+//import { Codec } from '@polkadot/types/types';
+import { Option } from '@polkadot/types/codec';
+import { u128 } from '@polkadot/types/primitive';
+import { AssetMetadata } from '@polkadot/types/interfaces';
+
 import { ApiDecoration } from '@polkadot/api/types';
 import { IAssetInfo } from './types';
-import { AssetMetadata } from '@polkadot/types/interfaces';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const db = require('better-sqlite3-helper');
@@ -107,6 +113,7 @@ async function main() {
 
     let stBalanceAssets = "";
     let stLoanAssets = "";
+    let stStreamAssets = "";
     if (assetsAvailable) {
       const balanceAssets = await polkaStore.fetchAssetBalances(atBlock, accountID);
       if (balanceAssets.assets.length) {
@@ -132,9 +139,24 @@ async function main() {
           }
         }
         if (stLoanAssets > "")
-          stLoanAssets = "Lend: " + stLoanAssets;
+          stLoanAssets = "Lend:   " + stLoanAssets;
       }
 
+      if (apiAt.query.streaming) { // Only, if the runtime includes streaming pallet at this block
+        const arrStreamBal = await getStreaming(accountID, apiAt);
+        if (arrStreamBal)
+          for (let i = 0, n = arrStreamBal.length; i < n; i++) {
+            const sb = arrStreamBal[i];
+            const amd = arrAssetMetaData[sb.assetId];
+            const decimals = amd ? amd.decimals.toNumber() : api.registry.chainDecimals[0];
+            const symbol = amd ? amd.symbol.toHuman() : api.registry.chainTokens[0];
+            const v = Divide(sb.remainingBalance, BigInt(Math.pow(10, decimals)));
+            stStreamAssets += (stStreamAssets > "" ? ", " : " ") + v + " " + symbol;
+          }
+
+        if (stStreamAssets > "")
+          stStreamAssets = "Stream: " + stStreamAssets;
+      }
     }
 
     console.log('------------------------------------------',);
@@ -154,6 +176,8 @@ async function main() {
       console.log("  " + stBalanceAssets);
     if (stLoanAssets > "")
       console.log("  " + stLoanAssets);
+    if (stStreamAssets > "")
+      console.log("  " + stStreamAssets);
 
     if (isRelayChain) {
       if (!diffBonded)
@@ -177,6 +201,7 @@ async function getLoan(assetId: number, amd: AssetMetadata, accountID: string, a
   if (!symbol)
     return undefined;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const deposit = BigInt((await apiAt.query.loans.accountDeposits(assetId, accountID) as any).voucherBalance.toString());
 
   if (!deposit)
@@ -185,4 +210,62 @@ async function getLoan(assetId: number, amd: AssetMetadata, accountID: string, a
   const e = BigInt((await apiAt.query.loans.exchangeRate(assetId)).toString());
   const v = Divide(deposit * e, BigInt(10 ** (18 + amd.decimals.toNumber())));
   return { balance: v, assetId: assetId, symbol: symbol }
+}
+
+// --------------------------------------------------------------
+/*
+export interface PalletStreamingStream {
+  remainingBalance: u128,
+  deposit: u128,
+  assetId: u32,
+  ratePerSec: u128,
+  sender: AccountId32,
+  recipient: AccountId32,
+  startTime: u64,
+  endTime: u64,
+  status: PalletStreamingStreamStatus,
+  cancellable: bool
+}; 
+*/
+
+export interface StreamData {
+  remainingBalance: bigint,
+  deposit: bigint,
+  assetId: number,
+  ratePerSec: bigint,
+  sender: string,
+  recipient: string,
+  startTime: Date,
+  endTime: Date,
+}
+
+async function getStreaming(accountID: string, apiAt: ApiDecoration<"promise">): Promise<StreamData[] | undefined> {
+  if (!apiAt.query.streaming)
+    return undefined;
+
+  const ret: StreamData[] = [];
+  const optStreamIds = await apiAt.query.streaming.streamLibrary(accountID, "Receive") as Option<Vec<u128>>;
+  if (optStreamIds.isSome) {
+    const arrStreamIds = optStreamIds.unwrap();
+    for (let i = 0, n = arrStreamIds.length; i < n; i++) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const optStreamData = await apiAt.query.streaming.streams(arrStreamIds[i]) as Option<any>;
+      if (optStreamData.isSome) {
+        const streamData = optStreamData.unwrap();
+        const sd: StreamData = {
+          remainingBalance: streamData.remainingBalance.toBigInt(),
+          deposit: streamData.deposit.toBigInt(),
+          assetId: streamData.assetId.toNumber(),
+          ratePerSec: streamData.ratePerSec.toBigInt(),
+          sender: streamData.sender.toString(),
+          recipient: streamData.recipient.toString(),
+          startTime: new Date(streamData.startTime.toNumber() * 1000),
+          endTime: new Date(streamData.endTime.toNumber() * 1000),
+        }
+        ret.push(sd);
+
+      }
+    }
+  }
+  return ret;
 }
