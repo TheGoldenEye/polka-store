@@ -113,6 +113,7 @@ async function main() {
 
     let stBalanceAssets = "";
     let stLoanAssets = "";
+    let stFarmingAssets = "";
     let stStreamAssets = "";
     if (assetsAvailable) {
       const balanceAssets = await polkaStore.fetchAssetBalances(atBlock, accountID);
@@ -140,6 +141,18 @@ async function main() {
         }
         if (stLoanAssets > "")
           stLoanAssets = "Lend:   " + stLoanAssets;
+      }
+
+      if (apiAt.query.farming) { // Only, if the runtime includes farming pallet at this block
+        for (let i = 0, n = arrAllAssets.length; i < n; i++) {
+          const assetId = arrAllAssets[i].assetId as number;
+          const b = await getFarming(assetId, arrAssetMetaData[assetId], accountID, apiAt);
+          if (b?.balance) {
+            stFarmingAssets += (stFarmingAssets > "" ? ", " : " ") + b.balance + " " + b.symbol;
+          }
+        }
+        if (stFarmingAssets > "")
+          stFarmingAssets = "Farming:" + stFarmingAssets;
       }
 
       if (apiAt.query.streaming) { // Only, if the runtime includes streaming pallet at this block
@@ -176,6 +189,8 @@ async function main() {
       console.log("  " + stBalanceAssets);
     if (stLoanAssets > "")
       console.log("  " + stLoanAssets);
+    if (stFarmingAssets > "")
+      console.log("  " + stFarmingAssets);
     if (stStreamAssets > "")
       console.log("  " + stStreamAssets);
 
@@ -209,6 +224,34 @@ async function getLoan(assetId: number, amd: AssetMetadata, accountID: string, a
 
   const e = BigInt((await apiAt.query.loans.exchangeRate(assetId)).toString());
   const v = Divide(deposit * e, BigInt(10 ** (18 + amd.decimals.toNumber())));
+  return { balance: v, assetId: assetId, symbol: symbol }
+}
+
+// --------------------------------------------------------------
+export interface FarmingBalance { balance: number; assetId: number; symbol: string; }
+/*
+export interface PalletFarmingUserPosition extends Struct {
+  readonly depositBalance: u128;
+  readonly lockBalanceItems: Vec<ITuple<[u128, u32]>>;
+  readonly rewardAmount: u128;
+  readonly rewardPerSharePaid: u128;
+}
+*/
+async function getFarming(assetId: number, amd: AssetMetadata, accountID: string, apiAt: ApiDecoration<"promise">): Promise<FarmingBalance | undefined> {
+  if (!apiAt.query.farming)
+    return undefined;
+
+  const symbol = amd.symbol.toHuman()?.toString();
+  if (!symbol)
+    return undefined;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const deposit = BigInt((await apiAt.query.farming.positions(assetId, 0, 0, accountID) as any).depositBalance.toString());
+
+  if (!deposit)
+    return { balance: 0, assetId: assetId, symbol: symbol }
+
+  const v = Divide(deposit, BigInt(10 ** amd.decimals.toNumber()));
   return { balance: v, assetId: assetId, symbol: symbol }
 }
 
