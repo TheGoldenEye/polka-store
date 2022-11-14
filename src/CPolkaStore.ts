@@ -1,7 +1,13 @@
 import { ApiPromise } from '@polkadot/api';
 import { ApiDecoration } from '@polkadot/api/types';
 import { Compact, Option } from '@polkadot/types';
-import { AssetId, BlockHash, RuntimeVersion, MultiLocationV0, MultiAssetV0, StakingLedger, BalanceOf, Outcome } from '@polkadot/types/interfaces';
+import {
+  AssetId, BlockHash, RuntimeVersion,
+  VersionedMultiLocation, VersionedMultiAssets,
+  MultiLocationV0, MultiAssetV0,
+  MultiLocationV1, MultiAssetV1,
+  StakingLedger, BalanceOf, Outcome
+} from '@polkadot/types/interfaces';
 import {
   IBlock, IChainData, IExtrinsic, ISanitizedEvent, IOnInitializeOrFinalize,
   IAccountBalanceInfo, IAccountStakingInfo, IAccountAssetsBalances, IAssetInfo
@@ -669,43 +675,38 @@ export class CPolkaStore {
   }
 
   // --------------------------------------------------------------
-  // process missing events for inter chain transfers
-  private async ProcessMissingToParachainTransfer(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number, specVer: number): Promise<void> {
+  private GetParaData(dest: VersionedMultiLocation, beneficiary: VersionedMultiLocation, assets: VersionedMultiAssets)
+    : undefined | { parachain: string, net: string, account: string, amounts: bigint[] } {
+    if (dest.isV0 && beneficiary.isV0 && assets.asV0)
+      return this.GetParaData0(dest.asV0, beneficiary.asV0, assets.asV0)
+    else if (dest.isV1 && beneficiary.isV1 && assets.asV1)
+      return this.GetParaData1(dest.asV1, beneficiary.asV1, assets.asV1)
 
-    if (!data.isRelayChain ||
-      specVer < 9010 ||
-      !ex.signature ||      // we need a signer as sender
-      !ex.success ||
-      (ex.method != 'xcmPallet.reserveTransferAssets' && ex.method != 'xcmPallet.teleportAssets'))
-      return;
+    throw ('Unknown MultiLocationVersion');
+  }
 
-    if (ev.method != 'xcmPallet.Attempted') // a trigger event for emulated events
-      return;
+  // --------------------------------------------------------------
+  private GetParaData0(dest: MultiLocationV0, beneficiary: MultiLocationV0, assets: MultiAssetV0[])
+    : undefined | { parachain: string, net: string, account: string, amounts: bigint[] } {
 
-    const o = ev.data[0] as Outcome;
-    if (!o.isComplete)
-      return;
-
-    const dest = ex.args.dest as MultiLocationV0;
-    const beneficiary = ex.args.beneficiary as MultiLocationV0;
-    const assets = ex.args.assets as MultiAssetV0[];
     if (!dest.isX1 && !dest.isX2)
-      return;
-
+      return undefined;
     if (!beneficiary.isX1 && !beneficiary.isX2)
-      return;
+      return undefined;
 
     const destX1 = dest.isX1 ? dest.asX1 : dest.asX2[1];
     const beneficiaryX1 = beneficiary.isX1 ? beneficiary.asX1 : beneficiary.asX2[1];
 
     if (!destX1.isParachain)
-      return;
+      return undefined;
     if (!beneficiaryX1.isAccountId32)
-      return;
+      return undefined;
 
     const parachain = destX1.asParachain.toString();
     const net = beneficiaryX1.asAccountId32.network.toString();
     const account = beneficiaryX1.asAccountId32.id.toString();
+
+    const amounts: bigint[] = [];
 
     for (let i = 0; i < assets.length; i++) {
       if (!assets[i].isConcreteFungible) {
@@ -714,6 +715,84 @@ export class CPolkaStore {
       const a = assets[i].asConcreteFungible;
       //      if (!a.id.isNull)
       //        continue;
+      amounts.push(a.amount.toBigInt());
+    }
+
+    return { parachain, net, account, amounts };
+  }
+
+  // --------------------------------------------------------------
+  private GetParaData1(dest: MultiLocationV1, beneficiary: MultiLocationV1, assets: MultiAssetV1[])
+    : undefined | { parachain: string, net: string, account: string, amounts: bigint[] } {
+
+    const dest1 = dest.interior;
+    const beneficiary1 = beneficiary.interior;
+    if (!dest1.isX1 && !dest1.isX2)
+      return undefined;
+    if (!beneficiary1.isX1 && !beneficiary1.isX2)
+      return undefined;
+
+    const destX1 = dest1.isX1 ? dest1.asX1 : dest1.asX2[1];
+    const beneficiaryX1 = beneficiary1.isX1 ? beneficiary1.asX1 : beneficiary1.asX2[1];
+
+    if (!destX1.isParachain)
+      return undefined;
+    if (!beneficiaryX1.isAccountId32)
+      return undefined;
+
+    const parachain = destX1.asParachain.toString();
+    const net = beneficiaryX1.asAccountId32.network.toString();
+    const account = beneficiaryX1.asAccountId32.id.toString();
+
+    const amounts: bigint[] = [];
+
+    for (let i = 0; i < assets.length; i++) {
+      const a = assets[i];
+      if (!a.id.isConcrete)
+        continue;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const f = (a as any).fun;   // seems MultiAssetV1 type definition is wrong
+      if (f.isFungible) {
+        amounts.push(f.asFungible.toBigInt());
+      }
+    }
+
+    return { parachain, net, account, amounts };
+  }
+
+  // --------------------------------------------------------------
+  // process missing events for inter chain transfers
+  private async ProcessMissingToParachainTransfer(data: TBlockData, ex: IExtrinsic, exIdx: number, ev: ISanitizedEvent, evIdx: number, specVer: number): Promise<void> {
+    const ok =
+      data.isRelayChain &&
+      specVer >= 9010 &&    // no xcmTransfers before
+      ex.signature &&       // we need a signer as sender
+      ex.success &&
+      ex.method.startsWith('xcmPallet.');
+
+    if (!ok)
+      return;
+
+    if ((ex.method == 'xcmPallet.reserveTransferAssets' || ex.method == 'xcmPallet.limitedReserveTransferAssets') && specVer >= 9190)
+      return;   // new balances.Transfer event for parachain transfers available
+
+    // here we should have only teleports (xcmPallet.teleportAssets, xcmPallet.limitedTeleportAssets)
+
+    if (ev.method != 'xcmPallet.Attempted') // a trigger event for emulated events
+      return;
+
+    const o = ev.data[0] as Outcome;
+    if (!o.isComplete)
+      return;
+
+    const d = specVer < 9100      // no VersionedXXX
+      ? this.GetParaData0(ex.args.dest as MultiLocationV0, ex.args.beneficiary as MultiLocationV0, ex.args.assets as MultiAssetV0[])
+      : this.GetParaData(ex.args.dest as VersionedMultiLocation, ex.args.beneficiary as VersionedMultiLocation, ex.args.assets as VersionedMultiAssets);
+    if (!d)
+      return;
+
+    for (let i = 0; i < d.amounts.length; i++) {
 
       const tx: TTransaction = {
         chain: data.db.chain,
@@ -728,9 +807,9 @@ export class CPolkaStore {
         specVersion: undefined,
         transactionVersion: undefined,
         authorId: undefined,
-        senderId: ex.signature.signer.toString(),
-        recipientId: 'P' + parachain + ' ' + net + ':' + account,
-        amount: a.amount.toBigInt(),
+        senderId: ex.signature?.signer.toString(),
+        recipientId: 'P' + d.parachain + ' ' + d.net + ':' + d.account,
+        amount: d.amounts[i],
         totalFee: undefined,
         feeBalances: undefined,
         feeTreasury: undefined,
