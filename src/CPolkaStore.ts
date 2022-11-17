@@ -774,10 +774,13 @@ export class CPolkaStore {
     if (!ok)
       return;
 
+    // only teleports and reserveTransfers
+    if (ex.method != 'xcmPallet.teleportAssets' && ex.method != 'xcmPallet.limitedTeleportAssets' &&
+      ex.method != 'xcmPallet.reserveTransferAssets' && ex.method != 'xcmPallet.limitedReserveTransferAssets')
+      return;
+
     if ((ex.method == 'xcmPallet.reserveTransferAssets' || ex.method == 'xcmPallet.limitedReserveTransferAssets') && specVer >= 9190)
       return;   // new balances.Transfer event for parachain transfers available
-
-    // here we should have only teleports (xcmPallet.teleportAssets, xcmPallet.limitedTeleportAssets)
 
     if (ev.method != 'xcmPallet.Attempted') // a trigger event for emulated events
       return;
