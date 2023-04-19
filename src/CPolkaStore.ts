@@ -6,6 +6,7 @@ import {
   VersionedMultiLocation, VersionedMultiAssets,
   MultiLocationV0, MultiAssetV0,
   MultiLocationV1, MultiAssetV1,
+  MultiLocationV2, MultiAssetV2,
   StakingLedger, BalanceOf, Outcome
 } from '@polkadot/types/interfaces';
 import {
@@ -681,6 +682,8 @@ export class CPolkaStore {
       return this.GetParaData0(dest.asV0, beneficiary.asV0, assets.asV0)
     else if (dest.isV1 && beneficiary.isV1 && assets.asV1)
       return this.GetParaData1(dest.asV1, beneficiary.asV1, assets.asV1)
+    else if (dest.isV2 && beneficiary.isV2 && assets.asV2)
+      return this.GetParaData2(dest.asV2, beneficiary.asV2, assets.asV2)
 
     throw ('Unknown MultiLocationVersion');
   }
@@ -723,6 +726,46 @@ export class CPolkaStore {
 
   // --------------------------------------------------------------
   private GetParaData1(dest: MultiLocationV1, beneficiary: MultiLocationV1, assets: MultiAssetV1[])
+    : undefined | { parachain: string, net: string, account: string, amounts: bigint[] } {
+
+    const dest1 = dest.interior;
+    const beneficiary1 = beneficiary.interior;
+    if (!dest1.isX1 && !dest1.isX2)
+      return undefined;
+    if (!beneficiary1.isX1 && !beneficiary1.isX2)
+      return undefined;
+
+    const destX1 = dest1.isX1 ? dest1.asX1 : dest1.asX2[1];
+    const beneficiaryX1 = beneficiary1.isX1 ? beneficiary1.asX1 : beneficiary1.asX2[1];
+
+    if (!destX1.isParachain)
+      return undefined;
+    if (!beneficiaryX1.isAccountId32)
+      return undefined;
+
+    const parachain = destX1.asParachain.toString();
+    const net = beneficiaryX1.asAccountId32.network.toString();
+    const account = beneficiaryX1.asAccountId32.id.toString();
+
+    const amounts: bigint[] = [];
+
+    for (let i = 0; i < assets.length; i++) {
+      const a = assets[i];
+      if (!a.id.isConcrete)
+        continue;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const f = (a as any).fun;   // seems MultiAssetV1 type definition is wrong
+      if (f.isFungible) {
+        amounts.push(f.asFungible.toBigInt());
+      }
+    }
+
+    return { parachain, net, account, amounts };
+  }
+
+  // --------------------------------------------------------------
+  private GetParaData2(dest: MultiLocationV2, beneficiary: MultiLocationV2, assets: MultiAssetV2[])
     : undefined | { parachain: string, net: string, account: string, amounts: bigint[] } {
 
     const dest1 = dest.interior;
