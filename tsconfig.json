@@ -5,6 +5,7 @@
     "forceConsistentCasingInFileNames": true,
     "module": "commonjs",
     "moduleResolution": "node",
+    "skipLibCheck": true,
     "resolveJsonModule": true,
     "noEmitOnError": false,
     "noErrorTruncation": true,

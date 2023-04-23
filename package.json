@@ -19,10 +19,10 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@jsbits/get-package-version": "^1.0.3",
-    "@polkadot/api": "^9.0.1",
+    "@polkadot/api": "^10.4.1",
     "@types/better-sqlite3": "^5.4.0",
     "@types/sprintf-js": "^1.1.2",
-    "ajv": "=7.1.1",
+    "ajv": "^8.12.0",
     "better-sqlite3-helper": "^3.1.0",
     "bn": "^1.0.5",
     "chalk": "^4.1.0",

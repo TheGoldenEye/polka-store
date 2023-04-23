@@ -220,8 +220,7 @@ export default class ApiHandler {
     let locks;
     let free: Balance;
     let reserved: Balance;
-    let miscFrozen = this._api.createType('Balance', 0);
-    let feeFrozen = this._api.createType('Balance', 0);
+    let frozen = this._api.createType('Balance', 0);
 
     let ok = true;
 
@@ -238,8 +237,7 @@ export default class ApiHandler {
       locks = l;
       free = accountData.free;
       reserved = accountData.reserved;
-      miscFrozen = accountData.miscFrozen;
-      feeFrozen = accountData.feeFrozen;
+      frozen = accountData.frozen;
       ok = accountData && locks != undefined;
     }
     else {
@@ -263,8 +261,7 @@ export default class ApiHandler {
         nonce,
         free,
         reserved,
-        miscFrozen,
-        feeFrozen,
+        frozen,
         locks,
       };
     } else {

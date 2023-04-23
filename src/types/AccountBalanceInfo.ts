@@ -8,7 +8,6 @@ export interface IAccountBalanceInfo {
 	nonce: Index;
 	free: Balance;
 	reserved: Balance;
-	miscFrozen: Balance;
-	feeFrozen: Balance;
+	frozen: Balance;
 	locks: Vec<BalanceLock>;
 }
