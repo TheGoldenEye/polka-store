@@ -679,22 +679,33 @@ export class CPolkaStore {
   // --------------------------------------------------------------
   private GetParaData(dest: VersionedMultiLocation, beneficiary: VersionedMultiLocation, assets: VersionedMultiAssets)
     : undefined | { parachain: string, net: string, account: string, amounts: bigint[] } {
-    if (dest.isV0 && beneficiary.isV0 && assets.isV0)
-      return this.GetParaData0(dest.asV0, beneficiary.asV0, assets.asV0)
-    else if (dest.isV1 && beneficiary.isV1 && assets.isV1)
-      return this.GetParaData1(dest.asV1, beneficiary.asV1, assets.asV1)
-    else if (dest.isV2 && beneficiary.isV2 && assets.isV2)      // from spec9381 V2 und V3
-      return this.GetParaData2(dest.asV2, beneficiary.asV2, assets.asV2)
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    else if ((dest as any).isV3 && (beneficiary as any).isV3 && (assets as any).isV3) // no type definition for ...V3 available in api 9.14.2
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return this.GetParaData3((dest as any).asV3, (beneficiary as any).asV3, (assets as any).asV3)
+    const dest_ = dest as any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const beneficiary_ = beneficiary as any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const assets_ = assets as any;
+    const ver_d = dest.isV0 ? 0 : dest.isV1 ? 1 : dest.isV2 ? 2 : dest_.isV3 ? 3 : -1;
+    const ver_b = beneficiary.isV0 ? 0 : beneficiary.isV1 ? 1 : beneficiary.isV2 ? 2 : beneficiary_.isV3 ? 3 : -1;
+    const ver_a = assets.isV0 ? 0 : assets.isV1 ? 1 : assets.isV2 ? 2 : assets_.isV3 ? 3 : -1;
+
+    if (ver_d == 0 && ver_b == 0 && ver_a == 0)
+      return this.GetParaData00(dest.asV0, beneficiary.asV0, assets.asV0)
+    else if (ver_d == 0 && ver_b == 0 && ver_a == 1)   // special case
+      return this.GetParaData01(dest.asV0, beneficiary.asV0, assets.asV1)
+    else if (ver_d == 1 && ver_b == 1 && ver_a == 1)
+      return this.GetParaData1(dest.asV1, beneficiary.asV1, assets.asV1)
+    else if (ver_d == 2 && ver_b == 2 && ver_a == 2)   // from spec9381 V2 und V3
+      return this.GetParaData2(dest.asV2, beneficiary.asV2, assets.asV2)
+    else if (ver_d == 3 && ver_b == 3 && ver_a == 3)   // no type definition for ...V3 available in api 9.14.2
+      return this.GetParaData3(dest_.asV3, beneficiary_.asV3, assets_.asV3)
 
     throw ('Unknown MultiLocationVersion');
   }
 
   // --------------------------------------------------------------
-  private GetParaData0(dest: MultiLocationV0, beneficiary: MultiLocationV0, assets: MultiAssetV0[])
+  private GetParaData00(dest: MultiLocationV0, beneficiary: MultiLocationV0, assets: MultiAssetV0[])
     : undefined | { parachain: string, net: string, account: string, amounts: bigint[] } {
 
     if (!dest.isX1 && !dest.isX2)
@@ -724,6 +735,44 @@ export class CPolkaStore {
       //      if (!a.id.isNull)
       //        continue;
       amounts.push(a.amount.toBigInt());
+    }
+
+    return { parachain, net, account, amounts };
+  }
+
+  // --------------------------------------------------------------
+  private GetParaData01(dest: MultiLocationV0, beneficiary: MultiLocationV0, assets: MultiAssetV1[])
+    : undefined | { parachain: string, net: string, account: string, amounts: bigint[] } {
+
+    if (!dest.isX1 && !dest.isX2)
+      return undefined;
+    if (!beneficiary.isX1 && !beneficiary.isX2)
+      return undefined;
+
+    const destX1 = dest.isX1 ? dest.asX1 : dest.asX2[1];
+    const beneficiaryX1 = beneficiary.isX1 ? beneficiary.asX1 : beneficiary.asX2[1];
+
+    if (!destX1.isParachain)
+      return undefined;
+    if (!beneficiaryX1.isAccountId32)
+      return undefined;
+
+    const parachain = destX1.asParachain.toString();
+    const net = beneficiaryX1.asAccountId32.network.toString();
+    const account = beneficiaryX1.asAccountId32.id.toString();
+
+    const amounts: bigint[] = [];
+
+    for (let i = 0; i < assets.length; i++) {
+      const a = assets[i];
+      if (!a.id.isConcrete)
+        continue;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const f = (a as any).fun;   // seems MultiAssetV1 type definition is wrong
+      if (f.isFungible) {
+        amounts.push(f.asFungible.toBigInt());
+      }
     }
 
     return { parachain, net, account, amounts };
@@ -881,7 +930,7 @@ export class CPolkaStore {
       return;
 
     const d = specVer < 9100      // no VersionedXXX
-      ? this.GetParaData0(ex.args.dest as MultiLocationV0, ex.args.beneficiary as MultiLocationV0, ex.args.assets as MultiAssetV0[])
+      ? this.GetParaData00(ex.args.dest as MultiLocationV0, ex.args.beneficiary as MultiLocationV0, ex.args.assets as MultiAssetV0[])
       : this.GetParaData(ex.args.dest as VersionedMultiLocation, ex.args.beneficiary as VersionedMultiLocation, ex.args.assets as VersionedMultiAssets);
     if (!d)
       return;
