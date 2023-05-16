@@ -4,10 +4,7 @@ import { Compact, Option } from '@polkadot/types';
 import {
   AssetId, BlockHash, RuntimeVersion,
   VersionedMultiLocation, VersionedMultiAssets,
-  MultiLocationV0, MultiAssetV0,
-  MultiLocationV1, MultiAssetV1,
-  MultiLocationV2, MultiAssetV2,
-  //  MultiLocationV3, MultiAssetV3,
+  MultiLocationV0, MultiAssetV0, MultiAssetV1,
   StakingLedger, BalanceOf, Outcome
 } from '@polkadot/types/interfaces';
 import {
@@ -686,28 +683,37 @@ export class CPolkaStore {
     const beneficiary_ = beneficiary as any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const assets_ = assets as any;
-    const ver_d = dest.isV0 ? 0 : dest.isV1 ? 1 : dest.isV2 ? 2 : dest_.isV3 ? 3 : -1;
-    const ver_b = beneficiary.isV0 ? 0 : beneficiary.isV1 ? 1 : beneficiary.isV2 ? 2 : beneficiary_.isV3 ? 3 : -1;
-    const ver_a = assets.isV0 ? 0 : assets.isV1 ? 1 : assets.isV2 ? 2 : assets_.isV3 ? 3 : -1;
 
-    if (ver_d == 0 && ver_b == 0 && ver_a == 0)
-      return this.GetParaData00(dest.asV0, beneficiary.asV0, assets.asV0)
-    else if (ver_d == 0 && ver_b == 0 && ver_a == 1)   // special case
-      return this.GetParaData01(dest.asV0, beneficiary.asV0, assets.asV1)
-    else if (ver_d == 1 && ver_b == 1 && ver_a == 1)
-      return this.GetParaData1(dest.asV1, beneficiary.asV1, assets.asV1)
-    else if (ver_d == 2 && ver_b == 2 && ver_a == 2)   // from spec9381 V2 und V3
-      return this.GetParaData2(dest.asV2, beneficiary.asV2, assets.asV2)
-    else if (ver_d == 3 && ver_b == 3 && ver_a == 3)   // no type definition for ...V3 available in api 9.14.2
-      return this.GetParaData3(dest_.asV3, beneficiary_.asV3, assets_.asV3)
+    const destX = dest.isV0 ? dest.asV0
+      : dest.isV1 ? dest.asV1
+        : dest.isV2 ? dest.asV2
+          : dest_.asV3
+
+    const beneficiaryX = beneficiary.isV0 ? beneficiary.asV0
+      : beneficiary.isV1 ? beneficiary.asV1
+        : beneficiary.isV2 ? beneficiary.asV2
+          : beneficiary_.asV3;
+
+    const amounts = assets.isV0 ? this.GetMultiAssets0(assets.asV0)
+      : assets.isV1 ? this.GetMultiAssets1(assets.asV1)
+        : assets.isV2 ? this.GetMultiAssets1(assets.asV2)
+          : this.GetMultiAssets1(assets_.asV3);
+
+    if (destX && beneficiaryX && amounts)
+      return this.GetParaDataAny(destX, beneficiaryX, amounts)
 
     throw ('Unknown MultiLocationVersion');
   }
 
   // --------------------------------------------------------------
-  private GetParaData00(dest: MultiLocationV0, beneficiary: MultiLocationV0, assets: MultiAssetV0[])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private GetParaDataAny(destX: any, beneficiaryX: any, amounts: bigint[])
     : undefined | { parachain: string, net: string, account: string, amounts: bigint[] } {
 
+    const ver_d = !destX.interior ? 0 : 1;        // member interior in MultiLocationV1 and later
+    const ver_b = !beneficiaryX.interior ? 0 : 1;
+    const dest = ver_d == 1 ? destX.interior : destX;
+    const beneficiary = ver_b == 1 ? beneficiaryX.interior : beneficiaryX;
     if (!dest.isX1 && !dest.isX2)
       return undefined;
     if (!beneficiary.isX1 && !beneficiary.isX2)
@@ -725,6 +731,11 @@ export class CPolkaStore {
     const net = beneficiaryX1.asAccountId32.network.toString();
     const account = beneficiaryX1.asAccountId32.id.toString();
 
+    return { parachain, net, account, amounts };
+  }
+
+  // --------------------------------------------------------------
+  private GetMultiAssets0(assets: MultiAssetV0[]): bigint[] {
     const amounts: bigint[] = [];
 
     for (let i = 0; i < assets.length; i++) {
@@ -736,31 +747,11 @@ export class CPolkaStore {
       //        continue;
       amounts.push(a.amount.toBigInt());
     }
-
-    return { parachain, net, account, amounts };
+    return amounts;
   }
 
   // --------------------------------------------------------------
-  private GetParaData01(dest: MultiLocationV0, beneficiary: MultiLocationV0, assets: MultiAssetV1[])
-    : undefined | { parachain: string, net: string, account: string, amounts: bigint[] } {
-
-    if (!dest.isX1 && !dest.isX2)
-      return undefined;
-    if (!beneficiary.isX1 && !beneficiary.isX2)
-      return undefined;
-
-    const destX1 = dest.isX1 ? dest.asX1 : dest.asX2[1];
-    const beneficiaryX1 = beneficiary.isX1 ? beneficiary.asX1 : beneficiary.asX2[1];
-
-    if (!destX1.isParachain)
-      return undefined;
-    if (!beneficiaryX1.isAccountId32)
-      return undefined;
-
-    const parachain = destX1.asParachain.toString();
-    const net = beneficiaryX1.asAccountId32.network.toString();
-    const account = beneficiaryX1.asAccountId32.id.toString();
-
+  private GetMultiAssets1(assets: MultiAssetV1[]): bigint[] {
     const amounts: bigint[] = [];
 
     for (let i = 0; i < assets.length; i++) {
@@ -774,131 +765,7 @@ export class CPolkaStore {
         amounts.push(f.asFungible.toBigInt());
       }
     }
-
-    return { parachain, net, account, amounts };
-  }
-
-  // --------------------------------------------------------------
-  private GetParaData1(dest: MultiLocationV1, beneficiary: MultiLocationV1, assets: MultiAssetV1[])
-    : undefined | { parachain: string, net: string, account: string, amounts: bigint[] } {
-
-    const dest1 = dest.interior;
-    const beneficiary1 = beneficiary.interior;
-    if (!dest1.isX1 && !dest1.isX2)
-      return undefined;
-    if (!beneficiary1.isX1 && !beneficiary1.isX2)
-      return undefined;
-
-    const destX1 = dest1.isX1 ? dest1.asX1 : dest1.asX2[1];
-    const beneficiaryX1 = beneficiary1.isX1 ? beneficiary1.asX1 : beneficiary1.asX2[1];
-
-    if (!destX1.isParachain)
-      return undefined;
-    if (!beneficiaryX1.isAccountId32)
-      return undefined;
-
-    const parachain = destX1.asParachain.toString();
-    const net = beneficiaryX1.asAccountId32.network.toString();
-    const account = beneficiaryX1.asAccountId32.id.toString();
-
-    const amounts: bigint[] = [];
-
-    for (let i = 0; i < assets.length; i++) {
-      const a = assets[i];
-      if (!a.id.isConcrete)
-        continue;
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const f = (a as any).fun;   // seems MultiAssetV1 type definition is wrong
-      if (f.isFungible) {
-        amounts.push(f.asFungible.toBigInt());
-      }
-    }
-
-    return { parachain, net, account, amounts };
-  }
-
-  // --------------------------------------------------------------
-  private GetParaData2(dest: MultiLocationV2, beneficiary: MultiLocationV2, assets: MultiAssetV2[])
-    : undefined | { parachain: string, net: string, account: string, amounts: bigint[] } {
-
-    const dest1 = dest.interior;
-    const beneficiary1 = beneficiary.interior;
-    if (!dest1.isX1 && !dest1.isX2)
-      return undefined;
-    if (!beneficiary1.isX1 && !beneficiary1.isX2)
-      return undefined;
-
-    const destX1 = dest1.isX1 ? dest1.asX1 : dest1.asX2[1];
-    const beneficiaryX1 = beneficiary1.isX1 ? beneficiary1.asX1 : beneficiary1.asX2[1];
-
-    if (!destX1.isParachain)
-      return undefined;
-    if (!beneficiaryX1.isAccountId32)
-      return undefined;
-
-    const parachain = destX1.asParachain.toString();
-    const net = beneficiaryX1.asAccountId32.network.toString();
-    const account = beneficiaryX1.asAccountId32.id.toString();
-
-    const amounts: bigint[] = [];
-
-    for (let i = 0; i < assets.length; i++) {
-      const a = assets[i];
-      if (!a.id.isConcrete)
-        continue;
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const f = (a as any).fun;   // seems MultiAssetV2 type definition is wrong
-      if (f.isFungible) {
-        amounts.push(f.asFungible.toBigInt());
-      }
-    }
-
-    return { parachain, net, account, amounts };
-  }
-
-
-  // --------------------------------------------------------------
-  //private GetParaData3(dest: MultiLocationV3, beneficiary: MultiLocationV3, assets: MultiAssetV3[])
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private GetParaData3(dest: any, beneficiary: any, assets: any)
-    : undefined | { parachain: string, net: string, account: string, amounts: bigint[] } {
-
-    const dest1 = dest.interior;
-    const beneficiary1 = beneficiary.interior;
-    if (!dest1.isX1 && !dest1.isX2)
-      return undefined;
-    if (!beneficiary1.isX1 && !beneficiary1.isX2)
-      return undefined;
-
-    const destX1 = dest1.isX1 ? dest1.asX1 : dest1.asX2[1];
-    const beneficiaryX1 = beneficiary1.isX1 ? beneficiary1.asX1 : beneficiary1.asX2[1];
-
-    if (!destX1.isParachain)
-      return undefined;
-    if (!beneficiaryX1.isAccountId32)
-      return undefined;
-
-    const parachain = destX1.asParachain.toString();
-    const net = beneficiaryX1.asAccountId32.network.toString();
-    const account = beneficiaryX1.asAccountId32.id.toString();
-
-    const amounts: bigint[] = [];
-
-    for (let i = 0; i < assets.length; i++) {
-      const a = assets[i];
-      if (!a.id.isConcrete)
-        continue;
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const f = a.fun;
-      if (f.isFungible) {
-        amounts.push(f.asFungible.toBigInt());
-      }
-    }
-
-    return { parachain, net, account, amounts };
+    return amounts;
   }
 
   // --------------------------------------------------------------
@@ -930,7 +797,7 @@ export class CPolkaStore {
       return;
 
     const d = specVer < 9100      // no VersionedXXX
-      ? this.GetParaData00(ex.args.dest as MultiLocationV0, ex.args.beneficiary as MultiLocationV0, ex.args.assets as MultiAssetV0[])
+      ? this.GetParaDataAny(ex.args.dest as MultiLocationV0, ex.args.beneficiary as MultiLocationV0, this.GetMultiAssets0(ex.args.assets as MultiAssetV0[]))
       : this.GetParaData(ex.args.dest as VersionedMultiLocation, ex.args.beneficiary as VersionedMultiLocation, ex.args.assets as VersionedMultiAssets);
     if (!d)
       return;
