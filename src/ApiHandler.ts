@@ -460,7 +460,8 @@ export default class ApiHandler {
           return {
             assetId,
             balance: balanceProps.balance,
-            isFrozen: balanceProps.isFrozen,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            isFrozen: balanceProps.status ? balanceProps.status.isFrozen : (balanceProps as any).isFrozen, // isFrozen was replaced by status (runtime 9370?)
             isSufficient: balanceProps.reason.isSufficient,
           };
         }
